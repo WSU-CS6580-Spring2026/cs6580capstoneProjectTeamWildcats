@@ -1,6 +1,12 @@
 <a name="readme-top"></a>
 
-# 
+# The Snowbasin "Congestion Engine"
+
+## The Wildcats
+
+### Dani Lopez (add role), Hazem Dawahi (add role), Roberto Camposeco (add role), Kevin Bell (happy to help wherever)
+
+#### high level overview goes here
 
 [snowbasin feasibility worksheet google colab notebook](https://colab.research.google.com/drive/1AIIvkXQqKdX248AqOvofIc_4iH0ET74i?usp=sharing)
 
