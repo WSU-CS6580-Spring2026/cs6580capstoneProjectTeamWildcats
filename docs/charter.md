@@ -18,3 +18,5 @@ Primary stakeholder: Snowbasin Resort operations managers who coordinate staffin
 - **Hazem Dawahi** — Modeling Lead (feature engineering, model selection, evaluation).
 - **Roberto Camposeco** — Git/Project Manager (repo hygiene, issues, milestones, documentation).
 - **Kevin Bell** — Research Lead (domain research, stakeholder requirements, data validation).
+
+These roles are just made up. Feel free to change them at any time.
