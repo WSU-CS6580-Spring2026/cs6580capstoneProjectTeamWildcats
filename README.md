@@ -4,7 +4,11 @@
 
 ## The Wildcats
 
-### Dani Lopez (add role), Hazem Dawahi (add role), Roberto Camposeco (add role), Kevin Bell (happy to help wherever)
+### 
+- Dani Lopez (add role)
+- Hazem Dawahi (add role)
+- Roberto Camposeco (add role)
+- Kevin Bell (happy to help wherever)
 
 #### The Goal: Predict peak-hour traffic volume on Trappers Loop (SR-167) to optimize mountain resort staffing and parking operations 72 hours in advance.
 
