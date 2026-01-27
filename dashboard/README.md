@@ -1,4 +1,4 @@
-# Snowbase
+# snowbasin
 
 A Utah-focused AI assistant for snow conditions and UTA transit schedules.
 
@@ -30,8 +30,8 @@ A Utah-focused AI assistant for snow conditions and UTA transit schedules.
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-username/snowbase.git
-cd snowbase
+git clone https://github.com/your-username/snowbasin.git
+cd snowbasin
 ```
 
 ### 2. Install dependencies
