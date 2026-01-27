@@ -6,7 +6,7 @@
 
 ### 
 - Dani Lopez (add role)
-- Hazem Dawahi (add role)
+- Hazem Dawahi (Frontend and Backend integration)
 - Roberto Camposeco (add role)
 - Kevin Bell (happy to help wherever)
 
