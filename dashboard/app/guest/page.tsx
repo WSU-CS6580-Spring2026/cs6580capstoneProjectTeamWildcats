@@ -120,7 +120,7 @@ export default function GuestPage() {
   };
 
   return (
-    <div className="relative flex h-screen flex-col bg-background">
+    <div className="relative flex h-dvh flex-col bg-background">
       {snowEnabled && <SnowAnimation />}
 
       {/* Header */}

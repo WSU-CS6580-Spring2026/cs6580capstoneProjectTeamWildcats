@@ -210,7 +210,7 @@ export default function ChatPage() {
 
   if (authLoading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-background">
+      <div className="flex h-dvh items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
@@ -229,7 +229,7 @@ export default function ChatPage() {
         onSelectChat={handleSelectChat}
         onChatsChange={fetchChats}
       />
-      <SidebarInset className="relative z-10 flex h-screen flex-col">
+      <SidebarInset className="relative z-10 flex h-dvh flex-col">
         {/* Snow toggle button - desktop */}
         <div className="absolute top-4 right-4 z-20 hidden md:block">
           <SnowToggle enabled={snowEnabled} onToggle={toggleSnow} />
