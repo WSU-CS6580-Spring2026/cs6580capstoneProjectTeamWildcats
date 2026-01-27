@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Snowbase - Utah Snow & Transit Assistant",
+  title: "Snowbasin - Utah Snow & Transit Assistant",
   description: "Your AI assistant for Utah snow forecasts, ski conditions, and UTA transit information",
 };
 

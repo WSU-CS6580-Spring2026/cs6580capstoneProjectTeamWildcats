@@ -165,7 +165,7 @@ export function ChatSidebar({
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-blue-400 to-cyan-500">
             <Snowflake className="h-4 w-4 text-white" />
           </div>
-          <h1 className="text-lg font-semibold">Snowbase</h1>
+          <h1 className="text-lg font-semibold">Snowbasin</h1>
         </div>
         <div className="px-2 pb-2">
           <Button

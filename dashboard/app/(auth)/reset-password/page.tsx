@@ -143,7 +143,7 @@ export default function ResetPasswordPage() {
             <Snowflake className="size-5" />
           </div>
           <span className="text-lg bg-linear-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent font-semibold">
-            Snowbase
+            Snowbasin
           </span>
         </motion.a>
 

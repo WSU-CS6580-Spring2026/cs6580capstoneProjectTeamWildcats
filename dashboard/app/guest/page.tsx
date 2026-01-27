@@ -129,7 +129,7 @@ export default function GuestPage() {
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-blue-400 to-cyan-500">
             <Snowflake className="h-4 w-4 text-white" />
           </div>
-          <span className="font-semibold">Snowbase</span>
+          <span className="font-semibold">Snowbasin</span>
           <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
             Guest Mode
           </span>
@@ -158,7 +158,7 @@ export default function GuestPage() {
                     <Snowflake className="h-5 w-5 text-white" />
                   </div>
                   <div>
-                    <h2 className="text-lg font-semibold text-foreground">Welcome to Snowbase</h2>
+                    <h2 className="text-lg font-semibold text-foreground">Welcome to Snowbasin</h2>
                     <p className="text-xs text-muted-foreground">Guest Mode - Chats are not saved</p>
                   </div>
                 </div>

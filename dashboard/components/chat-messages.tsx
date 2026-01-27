@@ -45,7 +45,7 @@ export function ChatMessages({
         <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-linear-to-br from-blue-400 to-cyan-500">
           <Snowflake className="h-8 w-8 text-white" />
         </div>
-        <h2 className="mb-2 text-xl sm:text-2xl font-semibold text-center">Welcome to Snowbase</h2>
+        <h2 className="mb-2 text-xl sm:text-2xl font-semibold text-center">Welcome to Snowbasin</h2>
         <p className="text-center text-sm sm:text-base text-muted-foreground max-w-md">
           Ask me about Utah snow forecasts, ski conditions, or UTA transit schedules.
         </p>
@@ -170,7 +170,7 @@ function MessageBubble({
         "text-xs font-medium mb-1.5 px-1",
         isUser ? "text-primary" : "text-muted-foreground"
       )}>
-        {isUser ? "You" : "Snowbase"}
+        {isUser ? "You" : "Snowbasin"}
       </span>
 
       {/* Message Content */}

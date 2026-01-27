@@ -147,7 +147,7 @@ export function SignupForm({
                   Create your account
                 </h1>
                 <p className="text-muted-foreground text-sm text-balance">
-                  Join Snowbase for Utah snow & transit updates
+                  Join Snowbasin for Utah snow & transit updates
                 </p>
               </motion.div>
 
@@ -301,7 +301,7 @@ export function SignupForm({
                 className="text-center"
               >
                 <Snowflake className="h-16 w-16 mx-auto mb-6 opacity-90" />
-                <h2 className="text-2xl font-bold mb-4">Welcome to Snowbase</h2>
+                <h2 className="text-2xl font-bold mb-4">Welcome to Snowbasin</h2>
                 <p className="text-white/80 mb-8 max-w-xs">
                   Your personal assistant for Utah snow conditions and UTA transit information.
                 </p>

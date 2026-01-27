@@ -240,7 +240,7 @@ export default function ChatPage() {
             <Menu className="h-5 w-5" />
           </SidebarTrigger>
           <Snowflake className="h-5 w-5 text-blue-500" />
-          <span className="font-semibold">Snowbase</span>
+          <span className="font-semibold">Snowbasin</span>
           <div className="ml-auto">
             <SnowToggle enabled={snowEnabled} onToggle={toggleSnow} />
           </div>
@@ -258,7 +258,7 @@ export default function ChatPage() {
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-blue-400 to-cyan-500">
                       <Snowflake className="h-5 w-5 text-white" />
                     </div>
-                    <h2 className="text-lg font-semibold text-foreground">Welcome to Snowbase</h2>
+                    <h2 className="text-lg font-semibold text-foreground">Welcome to Snowbasin</h2>
                   </div>
 
                   <p className="text-sm text-muted-foreground mb-4">
