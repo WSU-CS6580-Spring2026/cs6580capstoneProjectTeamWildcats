@@ -8,7 +8,7 @@
 - Dani Lopez (add role)
 - Hazem Dawahi (Frontend and Backend integration)
 - Roberto Camposeco (add role)
-- Kevin Bell (Happy to help wherever)
+- Kevin Bell (happy to help wherever)
 
 #### The Goal: Predict peak-hour traffic volume on Trappers Loop (SR-167) to optimize mountain resort staffing and parking operations 72 hours in advance.
 
