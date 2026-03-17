@@ -37,23 +37,6 @@ class TrafficLSTM(nn.Module):
         return output
 
 
-def load_random_forest_model(repo_id: str, token: str | None = None):
-    """Load Random Forest model from Hugging Face Hub.
-
-    Args:
-        repo_id: Repository ID (e.g., 'username/snowbasin-traffic-random-forest')
-        token: Hugging Face API token (optional, only needed for private repos)
-
-    Returns:
-        Loaded sklearn pipeline model
-    """
-    model_path = hf_hub_download(
-        repo_id=repo_id, filename="champion_model.joblib", token=token
-    )
-    model = joblib.load(model_path)
-    return model
-
-
 def load_lstm_model(repo_id: str, token: str | None = None):
     """Load LSTM model from Hugging Face Hub.
 
@@ -109,19 +92,6 @@ def load_lstm_model(repo_id: str, token: str | None = None):
     }
 
 
-def predict_with_random_forest(model, features_df: pd.DataFrame) -> np.ndarray:
-    """Make predictions using the Random Forest model.
-
-    Args:
-        model: Loaded sklearn pipeline model
-        features_df: DataFrame with required features
-
-    Returns:
-        Array of predictions
-    """
-    return model.predict(features_df)
-
-
 def predict_with_lstm(
     model_dict: dict, features_df: pd.DataFrame, use_sequences: bool = False
 ) -> np.ndarray:
@@ -167,15 +137,8 @@ def predict_with_lstm(
 
 # Example usage
 if __name__ == "__main__":
-    # Example: Load Random Forest model
-    print("Loading Random Forest model from Hugging Face...")
-    rf_model = load_random_forest_model(
-        repo_id="YOUR_USERNAME/snowbasin-traffic-random-forest"
-    )
-    print("Random Forest model loaded successfully!")
-
     # Example: Load LSTM model
-    print("\nLoading LSTM model from Hugging Face...")
+    print("Loading LSTM model from Hugging Face...")
     lstm_model_dict = load_lstm_model(
         repo_id="YOUR_USERNAME/snowbasin-traffic-lstm"
     )
@@ -184,5 +147,4 @@ if __name__ == "__main__":
 
     # Example prediction (you would need actual feature data)
     # sample_features = pd.DataFrame({...})  # Your feature data
-    # rf_predictions = predict_with_random_forest(rf_model, sample_features)
     # lstm_predictions = predict_with_lstm(lstm_model_dict, sample_features)
