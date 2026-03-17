@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Copy, Check, Pencil, RefreshCw, Volume2, VolumeX, Snowflake, Clock } from "lucide-react";
+import { Copy, Check, Pencil, RefreshCw, Volume2, VolumeX, Snowflake, Clock, FileText, ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MapDisplay, parsePlacesFromContent, cleanMapDataFromContent } from "./map-display";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,12 @@ import {
 export interface MessageMeta {
   model?: string;   // "random-forest" | "lstm"
   sources?: string[]; // ["UDOT", "UTA", "ML"]
+  debug?: {
+    mlRequest?: Record<string, unknown>;
+    mlResponse?: Record<string, unknown>;
+    udotData?: string;
+    utaData?: string;
+  };
 }
 
 export interface Message {
@@ -219,6 +225,107 @@ function CodeBlock({ children, className }: { children?: React.ReactNode; classN
 }
 
 
+function SourcesPanel({ debug, model }: { debug: NonNullable<MessageMeta["debug"]>; model?: string }) {
+  const [openSection, setOpenSection] = useState<string | null>(null);
+  const toggle = (key: string) => setOpenSection(openSection === key ? null : key);
+  const modelLabel = model === "lstm" ? "LSTM" : "Random Forest";
+
+  const sections: { key: string; title: string; icon: string; color: string; content: React.ReactNode }[] = [];
+
+  if (debug.mlRequest) {
+    const req = debug.mlRequest as Record<string, unknown>;
+    const res = debug.mlResponse as Record<string, unknown> | undefined;
+    sections.push({
+      key: "ml",
+      title: `${modelLabel} Model`,
+      icon: model === "lstm" ? "🧠" : "🌲",
+      color: "border-blue-200 dark:border-blue-800",
+      content: (
+        <div className="space-y-3">
+          <div>
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Request Parameters</p>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+              <span className="text-muted-foreground">Hour</span><span className="font-medium">{String(req.hour ?? "")}:00</span>
+              <span className="text-muted-foreground">Day</span><span className="font-medium">{String(req.day_of_week ?? "")}</span>
+              <span className="text-muted-foreground">Month</span><span className="font-medium">{String(req.month ?? "")}</span>
+              <span className="text-muted-foreground">Weekend</span><span className="font-medium">{req.is_weekend ? "Yes" : "No"}</span>
+              <span className="text-muted-foreground">Holiday</span><span className="font-medium">{req.is_federal_holiday ? "Yes" : "No"}</span>
+              <span className="text-muted-foreground">Temp</span><span className="font-medium">{String(req.temp_f ?? "")}°F</span>
+              <span className="text-muted-foreground">Humidity</span><span className="font-medium">{String(req.humidity_pct ?? "")}%</span>
+              <span className="text-muted-foreground">Wind</span><span className="font-medium">{String(req.wind_speed_mph ?? "")} mph</span>
+              <span className="text-muted-foreground">Snow Depth</span><span className="font-medium">{String(req.snow_depth_in ?? "")}&quot;</span>
+              <span className="text-muted-foreground">Precip (1hr)</span><span className="font-medium">{String(req.precip_1hr_in ?? "")}&quot;</span>
+            </div>
+          </div>
+          {res && (
+            <div>
+              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Response</p>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                <span className="text-muted-foreground">Prediction</span><span className="font-bold text-primary">{String(res.prediction ?? "")} vehicles/hr</span>
+                <span className="text-muted-foreground">Confidence</span><span className="font-medium">{String(res.confidence ?? "")}</span>
+              </div>
+            </div>
+          )}
+        </div>
+      ),
+    });
+  }
+
+  if (debug.udotData) {
+    sections.push({
+      key: "udot",
+      title: "UDOT Road Data",
+      icon: "📡",
+      color: "border-orange-200 dark:border-orange-800",
+      content: (
+        <pre className="text-xs whitespace-pre-wrap text-muted-foreground max-h-48 overflow-y-auto leading-relaxed">
+          {String(debug.udotData)}
+        </pre>
+      ),
+    });
+  }
+
+  if (debug.utaData) {
+    sections.push({
+      key: "uta",
+      title: "UTA Transit Data",
+      icon: "🚌",
+      color: "border-green-200 dark:border-green-800",
+      content: (
+        <pre className="text-xs whitespace-pre-wrap text-muted-foreground max-h-48 overflow-y-auto leading-relaxed">
+          {String(debug.utaData)}
+        </pre>
+      ),
+    });
+  }
+
+  if (sections.length === 0) return null;
+
+  return (
+    <div className="mt-2 w-full max-w-[85%] sm:max-w-[80%] space-y-1.5">
+      {sections.map((s) => (
+        <div key={s.key} className={cn("rounded-lg border bg-card/50 overflow-hidden", s.color)}>
+          <button
+            onClick={() => toggle(s.key)}
+            className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium hover:bg-muted/50 transition-colors"
+          >
+            <span>{s.icon}</span>
+            <span>{s.title}</span>
+            <span className="ml-auto">
+              {openSection === s.key ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+            </span>
+          </button>
+          {openSection === s.key && (
+            <div className="px-3 pb-3 border-t border-border/50">
+              <div className="pt-2">{s.content}</div>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function MessageBubble({
   message,
   isStreaming,
@@ -239,11 +346,13 @@ function MessageBubble({
   const [editContent, setEditContent] = useState(message.content);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [showActions, setShowActions] = useState(false);
+  const [sourcesOpen, setSourcesOpen] = useState(false);
 
   // Parse places from assistant messages
   const places = !isUser ? parsePlacesFromContent(message.content) : null;
   const displayContent = places ? cleanMapDataFromContent(message.content) : message.content;
   const isError = !isUser && /^[⏳🔄🔧🔑💥📡]/.test(message.content);
+  const hasDebug = !isUser && message.meta?.debug && Object.keys(message.meta.debug).length > 0;
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(message.content);
@@ -461,7 +570,28 @@ function MessageBubble({
             </TooltipTrigger>
             <TooltipContent>{isSpeaking ? "Stop" : "Listen"}</TooltipContent>
           </Tooltip>
+
+          {hasDebug && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className={cn("h-7 w-7", sourcesOpen && "text-primary")}
+                  onClick={() => setSourcesOpen(!sourcesOpen)}
+                >
+                  <FileText className="h-3.5 w-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Sources</TooltipContent>
+            </Tooltip>
+          )}
         </div>
+      )}
+
+      {/* Sources debug panel */}
+      {sourcesOpen && hasDebug && (
+        <SourcesPanel debug={message.meta!.debug!} model={message.meta?.model} />
       )}
 
       {/* Render map if places are found */}

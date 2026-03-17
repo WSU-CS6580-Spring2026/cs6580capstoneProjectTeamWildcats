@@ -38,72 +38,108 @@ function extractPredictionParams(
   content: string,
   previousMessages: Array<{ role: string; content: string }>
 ) {
-  const allText = [...previousMessages.map((m) => m.content), content]
-    .join(" ")
-    .toLowerCase();
+  // Prioritize current message for params, fall back to user messages only (not assistant)
+  const currentLower = content.toLowerCase();
+  const userMsgs = previousMessages.filter((m) => m.role === "user");
+  const userHistory = userMsgs.map((m) => m.content).join(" ").toLowerCase();
+  const allUserText = userHistory + " " + currentLower;
 
-  // Day of week — support "today", "tomorrow", or explicit day names
+  // Use Mountain Time (Utah) regardless of server timezone
+  const now = new Date();
+  const utahFormatter = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Denver",
+    weekday: "long", hour: "numeric", month: "numeric",
+    hour12: false,
+  });
+  const utahParts = utahFormatter.formatToParts(now);
+  const utahWeekday = utahParts.find((p) => p.type === "weekday")!.value.toLowerCase();
+  const utahHour = parseInt(utahParts.find((p) => p.type === "hour")!.value);
+  const utahMonth = parseInt(utahParts.find((p) => p.type === "month")!.value);
+
   const DAY_NAMES = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
-  let day_of_week = "Saturday";
-  if (allText.includes("today")) {
-    const jsDay = new Date().getDay(); // 0=Sun..6=Sat
-    const ourIndex = (jsDay + 6) % 7;  // convert to Mon=0..Sun=6
-    day_of_week = DAY_NAMES[ourIndex].charAt(0).toUpperCase() + DAY_NAMES[ourIndex].slice(1);
-  } else if (allText.includes("tomorrow")) {
-    const jsDay = (new Date().getDay() + 1) % 7;
-    const ourIndex = (jsDay + 6) % 7;
-    day_of_week = DAY_NAMES[ourIndex].charAt(0).toUpperCase() + DAY_NAMES[ourIndex].slice(1);
-  } else {
+
+  // Default = current day in Utah
+  let day_of_week = utahWeekday.charAt(0).toUpperCase() + utahWeekday.slice(1);
+
+  // Check current message first, then user history for day
+  const daySource = currentLower.includes("tomorrow") || currentLower.includes("today")
+    ? currentLower
+    : allUserText;
+
+  if (daySource.includes("tomorrow")) {
+    const todayIndex = DAY_NAMES.indexOf(utahWeekday);
+    const tomorrowIndex = (todayIndex + 1) % 7;
+    day_of_week = DAY_NAMES[tomorrowIndex].charAt(0).toUpperCase() + DAY_NAMES[tomorrowIndex].slice(1);
+  } else if (!daySource.includes("today")) {
+    // Search current message first for explicit day names
+    let foundDay = false;
     for (const day of Object.keys(DAY_MAP)) {
-      if (allText.includes(day)) {
+      if (currentLower.includes(day)) {
         day_of_week = day.charAt(0).toUpperCase() + day.slice(1);
+        foundDay = true;
         break;
+      }
+    }
+    // If not in current message, check user history (most recent first)
+    if (!foundDay) {
+      for (const msg of [...userMsgs].reverse()) {
+        const msgLower = msg.content.toLowerCase();
+        for (const day of Object.keys(DAY_MAP)) {
+          if (msgLower.includes(day)) {
+            day_of_week = day.charAt(0).toUpperCase() + day.slice(1);
+            foundDay = true;
+            break;
+          }
+        }
+        if (foundDay) break;
       }
     }
   }
 
-  // Hour — "8am", "3pm", "8:00"
-  let hour = 9;
-  const hourMatch = allText.match(/\b(\d{1,2})(?::00)?\s*(am|pm)\b/);
+  // Default = current hour in Utah; check current message first, then user history
+  let hour = utahHour;
+  const hourMatchCurrent = currentLower.match(/\b(\d{1,2})(?::00)?\s*(am|pm)\b/);
+  const hourMatchHistory = allUserText.match(/\b(\d{1,2})(?::00)?\s*(am|pm)\b/);
+  const hourMatch = hourMatchCurrent || hourMatchHistory;
   if (hourMatch) {
     hour = parseInt(hourMatch[1]);
     if (hourMatch[2] === "pm" && hour !== 12) hour += 12;
     if (hourMatch[2] === "am" && hour === 12) hour = 0;
   }
 
-  // Month
+  // Default = current month
   const monthNames = [
     "january", "february", "march", "april", "may", "june",
     "july", "august", "september", "october", "november", "december",
   ];
-  let month = new Date().getMonth() + 1;
+  let month = utahMonth;
   for (let i = 0; i < monthNames.length; i++) {
-    if (allText.includes(monthNames[i])) { month = i + 1; break; }
+    if (allUserText.includes(monthNames[i])) { month = i + 1; break; }
   }
 
   // Snow depth — "18 inches of snow"
   let snow_depth_in = 18;
-  const snowMatch = allText.match(/(\d+)\s*(?:inches?|in\.?)\s*(?:of\s*)?snow/);
+  const snowMatch = allUserText.match(/(\d+)\s*(?:inches?|in\.?)\s*(?:of\s*)?snow/);
   if (snowMatch) snow_depth_in = parseInt(snowMatch[1]);
 
   // Temperature
   let temp_f = 28;
-  const tempMatch = allText.match(/(\d+)\s*(?:°f|degrees?\s*f)/);
+  const tempMatch = allUserText.match(/(\d+)\s*(?:°f|degrees?\s*f)/);
   if (tempMatch) temp_f = parseInt(tempMatch[1]);
 
   // Humidity
   let humidity_pct = 65;
-  const humMatch = allText.match(/(\d+)\s*%\s*humidity/);
+  const humMatch = allUserText.match(/(\d+)\s*%\s*humidity/);
   if (humMatch) humidity_pct = parseInt(humMatch[1]);
 
   // Wind
   let wind_speed_mph = 10;
-  const windMatch = allText.match(/(\d+)\s*mph/);
+  const windMatch = allUserText.match(/(\d+)\s*mph/);
   if (windMatch) wind_speed_mph = parseInt(windMatch[1]);
 
   const dayIndex = DAY_MAP[day_of_week.toLowerCase()] ?? 5;
   const is_weekend = dayIndex >= 5;
-  const is_federal_holiday = allText.includes("holiday") || allText.includes("federal");
+  const is_federal_holiday = allUserText.includes("holiday") || allUserText.includes("federal");
 
   return {
     hour, day_of_week, month, is_weekend, is_federal_holiday,
@@ -111,33 +147,47 @@ function extractPredictionParams(
   };
 }
 
-function hasPredictionIntent(content: string): boolean {
-  const lower = content.toLowerCase();
-  return PREDICTION_KEYWORDS.some((k) => lower.includes(k));
+function hasPredictionIntent(
+  content: string,
+  previousMessages: Array<{ role: string; content: string }> = []
+): boolean {
+  // Check current message AND previous USER messages for prediction intent (skip assistant responses)
+  const userMsgs = previousMessages.filter((m) => m.role === "user");
+  const allUserText = [...userMsgs.map((m) => m.content), content]
+    .join(" ")
+    .toLowerCase();
+  return PREDICTION_KEYWORDS.some((k) => allUserText.includes(k));
 }
 
 function hasEnoughInfoToPredict(
   content: string,
   previousMessages: Array<{ role: string; content: string }>
 ): boolean {
-  const allText = [...previousMessages.map((m) => m.content), content]
+  const userMsgs = previousMessages.filter((m) => m.role === "user");
+  const allUserText = [...userMsgs.map((m) => m.content), content]
     .join(" ")
     .toLowerCase();
 
-  const hasDay = Object.keys(DAY_MAP).some((d) => allText.includes(d)) || allText.includes("today") || allText.includes("tomorrow");
-  const hasTime = /\b\d{1,2}\s*(am|pm)\b/.test(allText);
-  const wantsDefaults = /typical|default|usual|average|use (?:rf|random forest|lstm|the model)|just predict|go ahead|yes.*(?:use|go)|sure|ok/.test(allText);
+  const hasDay = Object.keys(DAY_MAP).some((d) => allUserText.includes(d)) || allUserText.includes("today") || allUserText.includes("tomorrow");
+  const hasTime = /\b\d{1,2}\s*(am|pm)\b/.test(allUserText) || allUserText.includes("now") || allUserText.includes("right now") || allUserText.includes("current");
+  const wantsDefaults = /typical|default|usual|average|use (?:rf|random forest|lstm|the model)|just predict|go ahead|yes.*(?:use|go)|sure|ok/.test(allUserText);
 
   return hasDay || hasTime || wantsDefaults;
+}
+
+interface PredictionResult {
+  text: string;
+  mlRequest?: Record<string, unknown>;
+  mlResponse?: Record<string, unknown>;
 }
 
 async function fetchPredictionIfNeeded(
   content: string,
   model: string,
   previousMessages: Array<{ role: string; content: string }>
-): Promise<string> {
-  if (!hasPredictionIntent(content)) return "";
-  if (!hasEnoughInfoToPredict(content, previousMessages)) return "";
+): Promise<PredictionResult> {
+  if (!hasPredictionIntent(content, previousMessages)) return { text: "" };
+  if (!hasEnoughInfoToPredict(content, previousMessages)) return { text: "" };
 
   const params = extractPredictionParams(content, previousMessages);
   const modelLabel = model === "lstm" ? "LSTM" : "Random Forest";
@@ -150,10 +200,10 @@ async function fetchPredictionIfNeeded(
       signal: AbortSignal.timeout(15000),
     });
 
-    if (!res.ok) return "";
+    if (!res.ok) return { text: "", mlRequest: params };
     const data = await res.json();
 
-    return `**🤖 ML PREDICTION RESULT**
+    const text = `**🤖 ML PREDICTION RESULT**
 - **MODEL USED: ${modelLabel}** ← always name this exact model in your response
 - Predicted traffic: ${data.prediction} vehicles/hour
 - Conditions: ${params.day_of_week} at ${params.hour}:00 · ${params.temp_f}°F · ${params.snow_depth_in}" snow · ${params.humidity_pct}% humidity · ${params.wind_speed_mph} mph wind
@@ -161,8 +211,10 @@ async function fetchPredictionIfNeeded(
 - Confidence: ${data.confidence}
 
 Interpret this for the user. IMPORTANT: You MUST say "${modelLabel} model" (not any other model name). Light traffic = <400/hr, moderate = 400-600, busy = 600-800, very busy = >800. Explain what the number means in practical terms for driving to Snowbasin.`;
+
+    return { text, mlRequest: params, mlResponse: data };
   } catch {
-    return "";
+    return { text: "", mlRequest: params };
   }
 }
 
@@ -219,14 +271,24 @@ export async function POST(request: Request) {
       content: m.content,
     }));
 
+    // If the primary intent is prediction, only fetch road/transit if user explicitly asks
+    const isPrediction = hasPredictionIntent(content, messagesForAI.slice(0, -1));
+    const lower = content.toLowerCase();
+    const wantsRoad = isPrediction
+      ? ["condition", "road", "closure", "closed", "chain", "traction", "plow", "canyon"].some((k) => lower.includes(k))
+      : true;
+    const wantsTransit = isPrediction
+      ? ["bus", "trax", "train", "transit", "uta", "frontrunner"].some((k) => lower.includes(k))
+      : true;
+
     // Fetch all context in parallel
-    const [transitData, roadData, predictionData] = await Promise.all([
-      fetchTransitDataIfNeeded(content),
-      fetchRoadDataIfNeeded(content),
+    const [transitData, roadData, predictionResult] = await Promise.all([
+      wantsTransit ? fetchTransitDataIfNeeded(content) : Promise.resolve(""),
+      wantsRoad ? fetchRoadDataIfNeeded(content) : Promise.resolve(""),
       fetchPredictionIfNeeded(content, model, messagesForAI.slice(0, -1)),
     ]);
 
-    const realTimeData = [predictionData, roadData, transitData]
+    const realTimeData = [predictionResult.text, roadData, transitData]
       .filter(Boolean)
       .join("\n\n---\n\n");
 
@@ -234,10 +296,16 @@ export async function POST(request: Request) {
     const usesMaps = mapsKeywords.some((k) => content.toLowerCase().includes(k));
 
     const sources: string[] = [];
-    if (predictionData) sources.push("ML");
+    if (predictionResult.text) sources.push("ML");
     if (roadData) sources.push("UDOT");
     if (transitData) sources.push("UTA");
     if (usesMaps) sources.push("Maps");
+
+    const debug: Record<string, unknown> = {};
+    if (predictionResult.mlRequest) debug.mlRequest = predictionResult.mlRequest;
+    if (predictionResult.mlResponse) debug.mlResponse = predictionResult.mlResponse;
+    if (roadData) debug.udotData = roadData;
+    if (transitData) debug.utaData = transitData;
 
     const encoder = new TextEncoder();
     let fullResponse = "";
@@ -251,9 +319,9 @@ export async function POST(request: Request) {
             );
           }
 
-          // Emit meta so client can show model/source badges
+          // Emit meta so client can show model/source badges + debug data
           controller.enqueue(
-            encoder.encode(`data: ${JSON.stringify({ meta: { model, sources } })}\n\n`)
+            encoder.encode(`data: ${JSON.stringify({ meta: { model, sources, debug } })}\n\n`)
           );
 
           for await (const chunk of streamChatResponse(messagesForAI, realTimeData, model)) {
@@ -329,13 +397,22 @@ function getErrorMessage(error: unknown): string {
 }
 
 async function handleGuestChat(content: string, model: string) {
-  const [transitData, roadData, predictionData] = await Promise.all([
-    fetchTransitDataIfNeeded(content),
-    fetchRoadDataIfNeeded(content),
+  const isPredictionGuest = hasPredictionIntent(content);
+  const guestLower = content.toLowerCase();
+  const guestWantsRoad = isPredictionGuest
+    ? ["condition", "road", "closure", "closed", "chain", "traction", "plow", "canyon"].some((k) => guestLower.includes(k))
+    : true;
+  const guestWantsTransit = isPredictionGuest
+    ? ["bus", "trax", "train", "transit", "uta", "frontrunner"].some((k) => guestLower.includes(k))
+    : true;
+
+  const [transitData, roadData, predictionResult] = await Promise.all([
+    guestWantsTransit ? fetchTransitDataIfNeeded(content) : Promise.resolve(""),
+    guestWantsRoad ? fetchRoadDataIfNeeded(content) : Promise.resolve(""),
     fetchPredictionIfNeeded(content, model, []),
   ]);
 
-  const realTimeData = [predictionData, roadData, transitData]
+  const realTimeData = [predictionResult.text, roadData, transitData]
     .filter(Boolean)
     .join("\n\n---\n\n");
 
@@ -343,10 +420,16 @@ async function handleGuestChat(content: string, model: string) {
   const usesMapsGuest = mapsKeywordsGuest.some((k) => content.toLowerCase().includes(k));
 
   const guestSources: string[] = [];
-  if (predictionData) guestSources.push("ML");
+  if (predictionResult.text) guestSources.push("ML");
   if (roadData) guestSources.push("UDOT");
   if (transitData) guestSources.push("UTA");
   if (usesMapsGuest) guestSources.push("Maps");
+
+  const guestDebug: Record<string, unknown> = {};
+  if (predictionResult.mlRequest) guestDebug.mlRequest = predictionResult.mlRequest;
+  if (predictionResult.mlResponse) guestDebug.mlResponse = predictionResult.mlResponse;
+  if (roadData) guestDebug.udotData = roadData;
+  if (transitData) guestDebug.utaData = transitData;
 
   const encoder = new TextEncoder();
 
@@ -354,7 +437,7 @@ async function handleGuestChat(content: string, model: string) {
     async start(controller) {
       try {
         controller.enqueue(
-          encoder.encode(`data: ${JSON.stringify({ meta: { model, sources: guestSources } })}\n\n`)
+          encoder.encode(`data: ${JSON.stringify({ meta: { model, sources: guestSources, debug: guestDebug } })}\n\n`)
         );
         for await (const chunk of streamChatResponse(
           [{ role: "user" as const, content }],
