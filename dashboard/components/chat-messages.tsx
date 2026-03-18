@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Copy, Check, Pencil, RefreshCw, Volume2, VolumeX, Snowflake, Clock, FileText, ChevronDown, ChevronUp } from "lucide-react";
@@ -47,20 +47,20 @@ function getFollowUps(content: string): string[] {
   const lower = content.toLowerCase();
   const suggestions: string[] = [];
   if (lower.includes("vehicle") || lower.includes("traffic") || lower.includes("forecast")) {
-    suggestions.push("Check SR-167 road conditions");
-    suggestions.push("Compare weekend vs weekday traffic");
+    suggestions.push("What are current SR-167 road conditions?");
+    suggestions.push("How busy is traffic to Snowbasin this Saturday at 9am?");
   }
   if (lower.includes("sr-167") || lower.includes("road condition") || lower.includes("udot")) {
-    suggestions.push("Predict traffic for tomorrow morning");
+    suggestions.push("How busy is traffic to Snowbasin tomorrow at 8am?");
     suggestions.push("Are chains required on SR-210?");
   }
   if (lower.includes("bus") || lower.includes("uta") || lower.includes("transit")) {
-    suggestions.push("How busy will Snowbasin be today?");
-    suggestions.push("What are SR-167 conditions?");
+    suggestions.push("How busy is traffic to Snowbasin today at 9am?");
+    suggestions.push("What are SR-167 road conditions?");
   }
   if (suggestions.length === 0) {
-    suggestions.push("Predict traffic this Saturday at 9am");
-    suggestions.push("SR-167 road conditions");
+    suggestions.push("How busy is traffic to Snowbasin this Saturday at 9am?");
+    suggestions.push("What are current SR-167 road conditions?");
   }
   return suggestions.slice(0, 3);
 }
@@ -100,7 +100,7 @@ export function ChatMessages({
   const lastMsgIsError =
     lastMsg !== null &&
     lastMsg.role === "assistant" &&
-    /^[⏳🔄🔧🔑💥📡]/.test(lastMsg.content);
+    ["⏳","🔄","🔧","🔑","💥"].some(e => lastMsg.content.startsWith(e));
 
   // Determine whether to show follow-up suggestions:
   const showSuggestions =
@@ -242,29 +242,129 @@ function SourcesPanel({ debug, model }: { debug: NonNullable<MessageMeta["debug"
       color: "border-blue-200 dark:border-blue-800",
       content: (
         <div className="space-y-3">
-          <div>
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Request Parameters</p>
-            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-              <span className="text-muted-foreground">Hour</span><span className="font-medium">{String(req.hour ?? "")}:00</span>
-              <span className="text-muted-foreground">Day</span><span className="font-medium">{String(req.day_of_week ?? "")}</span>
-              <span className="text-muted-foreground">Month</span><span className="font-medium">{String(req.month ?? "")}</span>
-              <span className="text-muted-foreground">Weekend</span><span className="font-medium">{req.is_weekend ? "Yes" : "No"}</span>
-              <span className="text-muted-foreground">Holiday</span><span className="font-medium">{req.is_federal_holiday ? "Yes" : "No"}</span>
-              <span className="text-muted-foreground">Temp</span><span className="font-medium">{String(req.temp_f ?? "")}°F</span>
-              <span className="text-muted-foreground">Humidity</span><span className="font-medium">{String(req.humidity_pct ?? "")}%</span>
-              <span className="text-muted-foreground">Wind</span><span className="font-medium">{String(req.wind_speed_mph ?? "")} mph</span>
-              <span className="text-muted-foreground">Snow Depth</span><span className="font-medium">{String(req.snow_depth_in ?? "")}&quot;</span>
-              <span className="text-muted-foreground">Precip (1hr)</span><span className="font-medium">{String(req.precip_1hr_in ?? "")}&quot;</span>
-            </div>
-          </div>
-          {res && (
-            <div>
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Response</p>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-                <span className="text-muted-foreground">Prediction</span><span className="font-bold text-primary">{String(res.prediction ?? "")} vehicles/hr</span>
-                <span className="text-muted-foreground">Confidence</span><span className="font-medium">{String(res.confidence ?? "")}</span>
+          {(() => {
+            const resDetails = res ? (res as Record<string, unknown>).details as Record<string, unknown> | undefined : undefined;
+            const actualParams = (resDetails?.input_params as Record<string, unknown>) || req;
+            const weatherAvailable = actualParams.weather_available !== false && actualParams.temp_f != null;
+            const weatherNote = actualParams.weather_note as string | undefined;
+            const formatWeather = (val: unknown, unit: string, decimals = 1) => {
+              if (val == null || val === 0) return "N/A";
+              return `${Number(val).toFixed(decimals)}${unit}`;
+            };
+            return (
+              <div>
+                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Model Input Parameters</p>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                  <span className="text-muted-foreground">Hour</span><span className="font-medium">{String(actualParams.hour ?? req.hour ?? "")}:00</span>
+                  <span className="text-muted-foreground">Day</span><span className="font-medium">{String(actualParams.day_of_week ?? req.day_of_week ?? "")}</span>
+                  <span className="text-muted-foreground">Month</span><span className="font-medium">{String(actualParams.month ?? req.month ?? "")}</span>
+                  <span className="text-muted-foreground">Weekend</span><span className="font-medium">{(actualParams.is_weekend ?? req.is_weekend) ? "Yes" : "No"}</span>
+                  <span className="text-muted-foreground">Holiday</span><span className="font-medium">{(actualParams.is_federal_holiday ?? req.is_federal_holiday) ? "Yes" : "No"}</span>
+                  {weatherAvailable ? (
+                    <>
+                      <span className="text-muted-foreground">Temp</span><span className="font-medium">{formatWeather(actualParams.temp_f, "°F")}</span>
+                      <span className="text-muted-foreground">Humidity</span><span className="font-medium">{formatWeather(actualParams.humidity_pct, "%", 0)}</span>
+                      <span className="text-muted-foreground">Wind</span><span className="font-medium">{formatWeather(actualParams.wind_speed_mph, " mph")}</span>
+                      <span className="text-muted-foreground">Snow Depth</span><span className="font-medium">{formatWeather(actualParams.snow_depth_in, "\"")}</span>
+                      <span className="text-muted-foreground">Precip (1hr)</span><span className="font-medium">{formatWeather(actualParams.precip_1hr_in, "\"", 2)}</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-muted-foreground">Weather</span>
+                      <span className="font-medium text-yellow-600 dark:text-yellow-400">{weatherNote || "No sensor data for this period"}</span>
+                    </>
+                  )}
+                  {(actualParams.weather_source as string) ? (
+                    <>
+                      <span className="text-muted-foreground">Weather From</span>
+                      <span className="font-medium">{String(actualParams.weather_source)}</span>
+                    </>
+                  ) : null}
+                </div>
               </div>
-            </div>
+            );
+          })()}
+          {res && (
+            <>
+              <div>
+                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Response</p>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                  <span className="text-muted-foreground">Prediction</span><span className="font-bold text-primary">{String(res.prediction ?? "")} vehicles/hr</span>
+                  <span className="text-muted-foreground">Confidence</span><span className="font-medium">{String(res.confidence ?? "")}</span>
+                  <span className="text-muted-foreground">Model Used</span><span className="font-medium">{String(res.model ?? "")}</span>
+                </div>
+              </div>
+              {/* RF: show lag data source */}
+              {(res as Record<string, unknown>).details && (
+                <div>
+                  {(() => {
+                    const details = (res as Record<string, unknown>).details as Record<string, unknown>;
+                    const dataSource = (details.data_source || details.lag_source) as string | undefined;
+                    const dateUsed = details.date_used as string | undefined;
+                    const lagValues = details.lag_values as Record<string, number> | undefined;
+                    const seqUsed = details.sequence_used as Record<string, unknown> | undefined;
+                    const forecast = details.forecast_72h as Array<{ hours_ahead: number; prediction: number }> | undefined;
+                    return (
+                      <>
+                        {dataSource && (
+                          <div>
+                            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Training Data Used</p>
+                            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                              <span className="text-muted-foreground">Source</span>
+                              <span className={cn("font-medium", dataSource === "real_training_data" ? "text-green-600 dark:text-green-400" : "text-yellow-600 dark:text-yellow-400")}>
+                                {dataSource === "real_training_data" ? "Real Training Data" : "Default"}
+                              </span>
+                              {dateUsed && (
+                                <>
+                                  <span className="text-muted-foreground">Matched Date</span>
+                                  <span className="font-medium">{dateUsed}</span>
+                                </>
+                              )}
+                              {lagValues && Object.entries(lagValues).map(([k, v]) => (
+                                <Fragment key={k}>
+                                  <span className="text-muted-foreground">{k.replace("traffic_lag_", "Lag ")}h</span>
+                                  <span className="font-medium">{typeof v === "number" ? Math.round(v) : String(v)} veh/hr</span>
+                                </Fragment>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {seqUsed && (
+                          <div>
+                            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">LSTM Sequence Used</p>
+                            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                              <span className="text-muted-foreground">Start</span><span className="font-medium">{String(seqUsed.start ?? "")}</span>
+                              <span className="text-muted-foreground">End</span><span className="font-medium">{String(seqUsed.end ?? "")}</span>
+                              <span className="text-muted-foreground">Length</span><span className="font-medium">{String(seqUsed.length ?? "")} hours</span>
+                              {seqUsed.sample_traffic ? (
+                                <>
+                                  <span className="text-muted-foreground">Last 5h Traffic</span>
+                                  <span className="font-medium">{(seqUsed.sample_traffic as number[]).map(Math.round).join(", ")}</span>
+                                </>
+                              ) : null}
+                            </div>
+                          </div>
+                        )}
+                        {forecast && forecast.length > 0 && (
+                          <div>
+                            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">LSTM 72-Hour Forecast</p>
+                            <div className="grid grid-cols-4 gap-1 text-xs">
+                              {forecast.map((f) => (
+                                <div key={f.hours_ahead} className="text-center rounded bg-muted/50 px-1 py-0.5">
+                                  <span className="text-muted-foreground">+{f.hours_ahead}h</span>
+                                  <br />
+                                  <span className="font-bold">{f.prediction}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
+                </div>
+              )}
+            </>
           )}
         </div>
       ),
@@ -351,11 +451,11 @@ function MessageBubble({
   // Parse places from assistant messages
   const places = !isUser ? parsePlacesFromContent(message.content) : null;
   const displayContent = places ? cleanMapDataFromContent(message.content) : message.content;
-  const isError = !isUser && /^[⏳🔄🔧🔑💥📡]/.test(message.content);
+  const isError = !isUser && ["⏳","🔄","🔧","🔑","💥"].some(e => message.content.startsWith(e));
   const hasDebug = !isUser && message.meta?.debug && Object.keys(message.meta.debug).length > 0;
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(message.content);
+    await navigator.clipboard.writeText(displayContent);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -388,7 +488,21 @@ function MessageBubble({
       window.speechSynthesis.cancel();
       setIsSpeaking(false);
     } else {
-      const utterance = new SpeechSynthesisUtterance(displayContent);
+      // Strip markdown, emojis, table pipes, and special chars for clean TTS
+      const cleanText = displayContent
+        .replace(/\[MAP_DATA\][\s\S]*?\[\/MAP_DATA\]/g, "") // remove map data
+        .replace(/\|/g, " ") // table pipes
+        .replace(/^#{1,6}\s+/gm, "") // headers
+        .replace(/\*{1,3}([^*]+)\*{1,3}/g, "$1") // bold/italic
+        .replace(/`([^`]+)`/g, "$1") // inline code
+        .replace(/^[-*+]\s+/gm, "") // list markers
+        .replace(/^>\s+/gm, "") // blockquotes
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // links
+        .replace(/---+/g, "") // horizontal rules
+        .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}\u{200D}\u{20E3}\u{E0020}-\u{E007F}]/gu, "") // emojis
+        .replace(/\n{3,}/g, "\n\n") // excessive newlines
+        .trim();
+      const utterance = new SpeechSynthesisUtterance(cleanText);
       utterance.onend = () => setIsSpeaking(false);
       utterance.onerror = () => setIsSpeaking(false);
       window.speechSynthesis.speak(utterance);

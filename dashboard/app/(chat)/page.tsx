@@ -19,11 +19,13 @@ import { SnowToggle } from "@/components/snow-toggle";
 import { SpaceStatus } from "@/components/space-status";
 import { OfflineBanner } from "@/components/offline-banner";
 import { useSnow } from "@/hooks/use-snow";
+import { useGeolocation, mentionsUserLocation } from "@/hooks/use-geolocation";
 
 export default function ChatPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const { snowEnabled, toggleSnow } = useSnow();
+  const { position: userPosition, requestPosition } = useGeolocation();
   const [chats, setChats] = useState<Chat[]>([]);
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -86,6 +88,13 @@ export default function ChatPage() {
   const handleSendMessage = async (content: string) => {
     if (isLoading) return;
 
+    // If the user mentions their location, get coordinates before sending
+    const wantsLocation = mentionsUserLocation(content);
+    let coordinates = userPosition;
+    if (wantsLocation && !coordinates) {
+      coordinates = await requestPosition();
+    }
+
     const userMessage: Message = {
       id: `temp-${Date.now()}`,
       role: "user",
@@ -97,11 +106,21 @@ export default function ChatPage() {
 
     abortControllerRef.current = new AbortController();
 
+    // Build request body, attaching user coordinates when relevant
+    const body: Record<string, unknown> = {
+      chatId: currentChatId,
+      content,
+      model: selectedModel,
+    };
+    if (wantsLocation && coordinates) {
+      body.userCoordinates = coordinates;
+    }
+
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chatId: currentChatId, content, model: selectedModel }),
+        body: JSON.stringify(body),
         signal: abortControllerRef.current.signal,
       });
 
@@ -137,7 +156,8 @@ export default function ChatPage() {
               if (parsed.meta) {
                 responseMeta = parsed.meta;
               }
-              if (parsed.error) {
+              if (parsed.error && !fullContent) {
+                // Only show error if no content was received yet
                 fullContent = parsed.error;
               }
               if (parsed.content) {

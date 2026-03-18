@@ -93,24 +93,80 @@ Talking points:
 
 ---
 
-## Slide 8 — Sprint 4 MVP App
-**Application:** `src/app.py` (Gradio)
+## Slide 8 — Beyond MVP: Deployed Product
 
-Demo flow:
-1. Load `models/champion_model.joblib`.
-2. Enter weather + calendar + traffic context inputs.
-3. Click **Predict traffic volume**.
-4. Return predicted hourly vehicle count in real-time.
+What changed since midterm:
+- Dashboard deployed at `dashboard-snowbasin-wildcats.vercel.app`
+- Both RF and LSTM deployed to HuggingFace with training dataset
+- Claude AI chat — understands natural language, routes to correct model
+- Live UDOT + UTA integrations
+- Google Maps with user geolocation
+- Sources panel — shows what data each prediction used
 
-Run commands:
-```bash
-python src/train_model.py
-python src/app.py
+Architecture:
+```
+User → Next.js + Tailwind (Vercel)
+         ├→ Supabase Auth + PostgreSQL (chat history, users)
+         ├→ Claude AI (intent detection + response generation)
+         ├→ HuggingFace Space (FastAPI → RF + LSTM + Dataset)
+         ├→ UDOT API (road conditions, weather stations)
+         ├→ UTA GTFS-RT (service alerts)
+         └→ Google Maps (geolocation, markers, directions)
+```
+
+How a prediction works:
+```
+1. User asks a traffic question in natural language
+2. Dashboard extracts day, time, month and resolves the full date
+   - "Saturday at 9am" → Saturday, March 22, 2026 at 9:00 AM
+   - "tomorrow morning" → Thursday, March 19, 2026 at 8:00 AM
+   - "3 hours from now" → today, current hour + 3
+   - "trip plan for Saturday" → Saturday, March 22, 2026 at 9:00 AM
+   - Full date and time always shown in the response
+
+3. Sends request to HuggingFace FastAPI
+
+   ─── Random Forest ───
+   Finds matching day/hour/month in training data
+   → pulls traffic lags (1h, 2h, 3h, 6h, 12h, 24h, 1 week)
+   → pulls weather from nearest row with sensor data
+   → feeds to RF → single prediction
+
+   ─── LSTM ───
+   Finds matching day/hour/month in training data
+   → grabs 48 hours leading up to that point
+   → feeds sequence to LSTM → 72-hour forecast
+
+4. Dashboard also fetches UDOT / UTA / Maps if relevant (parallel)
+5. All results passed to Claude → writes one response with full date/time
+6. Sources panel shows: matched date, lags, weather, forecast
+```
+
+What gets fetched and when:
+```
+"how busy Saturday 9am"        → ML prediction
+"SR-167 road conditions"       → UDOT API
+"UTA alerts"                   → UTA GTFS-RT
+"directions from my location"  → geolocation + Google Maps
+"full trip plan for Saturday"  → ML + UDOT + UTA + Maps (all parallel)
 ```
 
 ---
 
-## Slide 9 — Reproducibility and Team Delivery
+## Slide 9 — Live Demo
+
+Demo flow:
+1. "How busy Saturday at 9am?" → prediction with full date + 6-hour trend
+2. Switch RF ↔ LSTM → open Sources panel to show matched data
+3. "SR-167 road conditions" → live UDOT data
+4. "Directions from my location" → geolocation + map
+5. "Full trip plan for Saturday" → ML + UDOT + UTA + Maps with full date/time
+
+Fallback: local `src/app.py` if internet is down
+
+---
+
+## Slide 10 — Reproducibility and Delivery
 - `requirements.txt` added for environment setup.
 - Pipeline scripts are reproducible and file-based:
   - `src/data_cleaning.py`
@@ -120,7 +176,7 @@ python src/app.py
 
 ---
 
-## Slide 10 — Risks, Next Steps, Ask
+## Slide 11 — Risks, Next Steps, Ask
 **Current risks**
 - Distribution drift from new weather/traffic patterns.
 - Need for stronger experiment/board process evidence.

@@ -12,10 +12,12 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { SpaceStatus } from "@/components/space-status";
 import { OfflineBanner } from "@/components/offline-banner";
 import { useSnow } from "@/hooks/use-snow";
+import { useGeolocation, mentionsUserLocation } from "@/hooks/use-geolocation";
 import { Button } from "@/components/ui/button";
 
 export default function GuestPage() {
   const { snowEnabled, toggleSnow } = useSnow();
+  const { position: userPosition, requestPosition } = useGeolocation();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [streamingContent, setStreamingContent] = useState("");
@@ -24,6 +26,13 @@ export default function GuestPage() {
 
   const handleSendMessage = async (content: string) => {
     if (isLoading) return;
+
+    // If the user mentions their location, get coordinates before sending
+    const wantsLocation = mentionsUserLocation(content);
+    let coordinates = userPosition;
+    if (wantsLocation && !coordinates) {
+      coordinates = await requestPosition();
+    }
 
     // Add user message optimistically
     const userMessage: Message = {
@@ -39,10 +48,20 @@ export default function GuestPage() {
     abortControllerRef.current = new AbortController();
 
     try {
+      const body: Record<string, unknown> = {
+        content,
+        guest: true,
+        model: selectedModel,
+        previousMessages: messages.map((m) => ({ role: m.role, content: m.content })),
+      };
+      if (wantsLocation && coordinates) {
+        body.userCoordinates = coordinates;
+      }
+
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content, guest: true, model: selectedModel }),
+        body: JSON.stringify(body),
         signal: abortControllerRef.current.signal,
       });
 
@@ -75,7 +94,7 @@ export default function GuestPage() {
               if (parsed.meta) {
                 responseMeta = parsed.meta;
               }
-              if (parsed.error) {
+              if (parsed.error && !fullContent) {
                 fullContent = parsed.error;
               }
               if (parsed.content) {
