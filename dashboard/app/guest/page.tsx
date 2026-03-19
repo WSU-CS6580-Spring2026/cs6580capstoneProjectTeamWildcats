@@ -11,13 +11,25 @@ import { SnowToggle } from "@/components/snow-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SpaceStatus } from "@/components/space-status";
 import { OfflineBanner } from "@/components/offline-banner";
+import { PredictionHero } from "@/components/prediction-hero";
+import { WeatherThemeProvider, useWeatherTheme } from "@/contexts/weather-theme";
 import { useSnow } from "@/hooks/use-snow";
 import { useGeolocation, mentionsUserLocation } from "@/hooks/use-geolocation";
 import { Button } from "@/components/ui/button";
 
 export default function GuestPage() {
+  return (
+    <WeatherThemeProvider>
+      <GuestPageInner />
+    </WeatherThemeProvider>
+  );
+}
+
+function GuestPageInner() {
   const { snowEnabled, toggleSnow } = useSnow();
   const { position: userPosition, requestPosition } = useGeolocation();
+  const { theme, updateFromPrediction } = useWeatherTheme();
+  const heroActive = theme.condition !== "default" || (theme.prediction != null && theme.prediction > 0);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [streamingContent, setStreamingContent] = useState("");
@@ -120,6 +132,15 @@ export default function GuestPage() {
           },
         ]);
       }
+
+      // Update weather background when we get a prediction
+      if (responseMeta?.debug?.mlResponse) {
+        updateFromPrediction(
+          responseMeta.debug.mlResponse as Record<string, unknown>,
+          responseMeta.model,
+          responseMeta.debug.mlRequest as Record<string, unknown> | undefined
+        );
+      }
     } catch (error) {
       if ((error as Error).name === "AbortError") {
         console.log("Request aborted");
@@ -169,7 +190,7 @@ export default function GuestPage() {
         <div className="flex items-center gap-2">
           <SpaceStatus />
           <ThemeToggle />
-          <SnowToggle enabled={snowEnabled} onToggle={toggleSnow} />
+          {!heroActive && <SnowToggle enabled={snowEnabled} onToggle={toggleSnow} />}
           <Link href="/login">
             <Button variant="outline" size="sm" className="gap-2">
               <LogIn className="h-4 w-4" />
@@ -180,6 +201,9 @@ export default function GuestPage() {
       </header>
 
       <OfflineBanner />
+
+      {/* Hero panel — slides in when a prediction arrives */}
+      <PredictionHero snowEnabled={snowEnabled} onToggleSnow={toggleSnow} />
 
       {/* Main chat area */}
       <div className="flex flex-1 flex-col min-h-0 relative z-10">

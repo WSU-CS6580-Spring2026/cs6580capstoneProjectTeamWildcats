@@ -18,14 +18,26 @@ import { SnowAnimation } from "@/components/snow-animation";
 import { SnowToggle } from "@/components/snow-toggle";
 import { SpaceStatus } from "@/components/space-status";
 import { OfflineBanner } from "@/components/offline-banner";
+import { PredictionHero } from "@/components/prediction-hero";
+import { WeatherThemeProvider, useWeatherTheme } from "@/contexts/weather-theme";
 import { useSnow } from "@/hooks/use-snow";
 import { useGeolocation, mentionsUserLocation } from "@/hooks/use-geolocation";
 
 export default function ChatPage() {
+  return (
+    <WeatherThemeProvider>
+      <ChatPageInner />
+    </WeatherThemeProvider>
+  );
+}
+
+function ChatPageInner() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const { snowEnabled, toggleSnow } = useSnow();
   const { position: userPosition, requestPosition } = useGeolocation();
+  const { theme, updateFromPrediction } = useWeatherTheme();
+  const heroActive = theme.condition !== "default" || (theme.prediction != null && theme.prediction > 0);
   const [chats, setChats] = useState<Chat[]>([]);
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -181,6 +193,15 @@ export default function ChatPage() {
         ]);
       }
 
+      // Update weather background when we get a prediction
+      if (responseMeta?.debug?.mlResponse) {
+        updateFromPrediction(
+          responseMeta.debug.mlResponse as Record<string, unknown>,
+          responseMeta.model,
+          responseMeta.debug.mlRequest as Record<string, unknown> | undefined
+        );
+      }
+
       if (newChatId || newTitle) {
         fetchChats();
       }
@@ -227,7 +248,6 @@ export default function ChatPage() {
 
   return (
     <SidebarProvider>
-      {snowEnabled && <SnowAnimation />}
       <ChatSidebar
         chats={chats}
         currentChatId={currentChatId}
@@ -235,9 +255,11 @@ export default function ChatPage() {
         onChatsChange={fetchChats}
       />
       <SidebarInset className="relative z-10 flex h-dvh flex-col">
-        <div className="absolute top-4 right-4 z-20 hidden md:block">
-          <SnowToggle enabled={snowEnabled} onToggle={toggleSnow} />
-        </div>
+        {!heroActive && (
+          <div className="absolute top-4 right-4 z-20 hidden md:block">
+            <SnowToggle enabled={snowEnabled} onToggle={toggleSnow} />
+          </div>
+        )}
 
         <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4 md:hidden bg-background/80 backdrop-blur-sm">
           <SidebarTrigger className="-ml-2">
@@ -252,6 +274,9 @@ export default function ChatPage() {
         </header>
 
         <OfflineBanner />
+
+        {/* Hero panel — slides in when a prediction arrives */}
+        <PredictionHero snowEnabled={snowEnabled} onToggleSnow={toggleSnow} />
 
         <div className="flex flex-1 flex-col min-h-0">
           <div className="flex-1 overflow-y-auto min-h-0">
@@ -291,6 +316,7 @@ export default function ChatPage() {
           </div>
         </div>
       </SidebarInset>
+      {snowEnabled && <SnowAnimation />}
     </SidebarProvider>
   );
 }
