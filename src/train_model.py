@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import shutil
 from pathlib import Path
 import os
 
@@ -9,8 +10,6 @@ import joblib
 import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.compose import ColumnTransformer
-from sklearn.dummy import DummyRegressor
-from sklearn.ensemble import RandomForestRegressor
 from sklearn.impute import SimpleImputer
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.model_selection import train_test_split
@@ -27,6 +26,9 @@ TARGET_COLUMN = "traffic_count_total"
 RANDOM_STATE = 42
 DEFAULT_SPLIT_STRATEGY = "time"
 VALID_SPLIT_STRATEGIES = {"random", "time"}
+SEQUENCE_LENGTH = 48
+FORECAST_HORIZON = 72
+WEEKLY_LAG_HOURS = 168
 
 
 def add_engineered_features(data: pd.DataFrame) -> pd.DataFrame:
@@ -52,7 +54,7 @@ def add_engineered_features(data: pd.DataFrame) -> pd.DataFrame:
     )
 
     daily["date"] = pd.to_datetime(daily["date"], errors="coerce").dt.normalize()
-    daily["weekday"] = daily["date"].dt.dayofweek  
+    daily["weekday"] = daily["date"].dt.dayofweek
 
     daily["is_holiday_weekend"] = False
 
@@ -115,13 +117,13 @@ def add_engineered_features(data: pd.DataFrame) -> pd.DataFrame:
     engineered["hour_cos"] = np.cos(2 * np.pi * engineered["hour"] / 24)
 
     engineered["day_of_week_sin"] = np.sin(2 * np.pi * engineered["day_of_week_num"] / 7)
-    engineered["day_of_week_cos"] = np.cos(2 * np.pi * engineered["day_of_week_num"] / 7)   
+    engineered["day_of_week_cos"] = np.cos(2 * np.pi * engineered["day_of_week_num"] / 7)
 
     engineered["month_sin"] = np.sin(2 * np.pi * engineered["month"] / 12)
-    engineered["month_cos"] = np.cos(2 * np.pi * engineered["month"] / 12)    
+    engineered["month_cos"] = np.cos(2 * np.pi * engineered["month"] / 12)
 
     # Drop day of week numeric
-    engineered = engineered.drop(columns=["day_of_week_num"])  
+    engineered = engineered.drop(columns=["day_of_week_num"])
 
     return engineered
 
@@ -206,172 +208,19 @@ def drop_missing_target_rows(data: pd.DataFrame) -> tuple[pd.DataFrame, int]:
     dropped_count = int(len(data) - len(filtered))
     return filtered, dropped_count
 
-
-def build_model_pipeline() -> Pipeline:
-    numeric_features = [
-        "lane_count",
-        "temp_f",
-        "dewpoint_f",
-        "humidity_pct",
-        "wind_speed_mph",
-        "snow_depth_in",
-        "precip_1hr_in",
-        "hour",
-        "month",
-        "temp_dewpoint_spread",
-        "is_weekend",
-        "is_federal_holiday",
-        "is_peak_hour",
-        "distance_to_holiday_weekend",
-        "traffic_lag_1",
-        "traffic_lag_2",
-        "traffic_lag_3",
-        "traffic_lag_6",
-        "traffic_lag_12",
-        "traffic_lag_24",
-        "traffic_lag_168",
-        "hour_sin",
-        "hour_cos",
-        "day_of_week_sin",
-        "day_of_week_cos",
-        "month_sin",
-        "month_cos",
-    ]
-    categorical_features = ["day_of_week"]
-
-    preprocess = ColumnTransformer(
-        transformers=[
-            (
-                "numeric",
-                Pipeline(
-                    steps=[
-                        ("imputer", SimpleImputer(strategy="median")),
-                        ("scaler", StandardScaler()),
-                    ]
-                ),
-                numeric_features,
-            ),
-            (
-                "categorical",
-                Pipeline(
-                    steps=[
-                        ("imputer", SimpleImputer(strategy="most_frequent")),
-                        ("encoder", OneHotEncoder(handle_unknown="ignore")),
-                    ]
-                ),
-                categorical_features,
-            ),
-        ]
-    )
-
-    regressor = RandomForestRegressor(
-        n_estimators=250,
-        min_samples_leaf=2,
-        random_state=RANDOM_STATE,
-        n_jobs=-1,
-    )
-
-    return Pipeline(steps=[("preprocess", preprocess), ("regressor", regressor)])
+def build_horizon_weights(horizon: int) -> np.ndarray:
+    weights = np.linspace(1.0, 0.3, num=horizon, dtype=np.float32)
+    return weights / weights.sum()
 
 
-
-def regression_metrics(y_true: pd.Series, y_pred: pd.Series | list[float]) -> dict[str, float]:
-    rmse = mean_squared_error(y_true, y_pred) ** 0.5
-    return {
-        "rmse": float(rmse),
-        "mae": float(mean_absolute_error(y_true, y_pred)),
-        "r2": float(r2_score(y_true, y_pred)),
-    }
-
-
-def split_dataset(
-    features: pd.DataFrame,
-    target: pd.Series,
-    timestamps: pd.Series,
-    test_size: float,
-    split_strategy: str,
-) -> tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
-    if split_strategy not in VALID_SPLIT_STRATEGIES:
-        raise ValueError(
-            f"Unsupported split strategy {split_strategy!r}. Use one of {sorted(VALID_SPLIT_STRATEGIES)}."
-        )
-
-    if not 0 < test_size < 1:
-        raise ValueError(f"test_size must be between 0 and 1, received {test_size}.")
-
-    if split_strategy == "random":
-        return train_test_split(
-            features,
-            target,
-            test_size=test_size,
-            random_state=RANDOM_STATE,
-        )
-
-    chronological = pd.DataFrame(
-        {
-            "timestamp": pd.to_datetime(timestamps, errors="coerce"),
-            "feature_row": features.index,
-            "target": target,
-        }
-    ).dropna(subset=["timestamp"])
-
-    if chronological.empty:
-        raise ValueError("Time-based split requires at least one valid timestamp.")
-
-    chronological = chronological.sort_values("timestamp")
-    split_index = max(int(len(chronological) * (1 - test_size)), 1)
-    split_index = min(split_index, len(chronological) - 1)
-
-    train_idx = chronological.iloc[:split_index]["feature_row"]
-    test_idx = chronological.iloc[split_index:]["feature_row"]
-
-    return (
-        features.loc[train_idx],
-        features.loc[test_idx],
-        target.loc[train_idx],
-        target.loc[test_idx],
-    )
-
-
-def evaluate_split(
-    features: pd.DataFrame,
-    target: pd.Series,
-    timestamps: pd.Series,
-    test_size: float,
-    split_strategy: str,
-) -> dict[str, float | int | str]:
-    X_train, X_test, y_train, y_test = split_dataset(
-        features=features,
-        target=target,
-        timestamps=timestamps,
-        test_size=test_size,
-        split_strategy=split_strategy,
-    )
-
-    baseline = DummyRegressor(strategy="mean")
-    baseline.fit(X_train, y_train)
-    baseline_predictions = baseline.predict(X_test)
-    baseline_scores = regression_metrics(y_test, baseline_predictions)
-
-    pipeline = build_model_pipeline()
-    pipeline.fit(X_train, y_train)
-    champion_predictions = pipeline.predict(X_test)
-    champion_scores = regression_metrics(y_test, champion_predictions)
-
-    return {
-        "split_strategy": split_strategy,
-        "train_rows": int(len(X_train)),
-        "test_rows": int(len(X_test)),
-        "baseline_rmse": baseline_scores["rmse"],
-        "baseline_mae": baseline_scores["mae"],
-        "baseline_r2": baseline_scores["r2"],
-        "champion_rmse": champion_scores["rmse"],
-        "champion_mae": champion_scores["mae"],
-        "champion_r2": champion_scores["r2"],
-        "pipeline": pipeline,
-        "y_test": y_test,
-        "champion_predictions": champion_predictions,
-    }
+def weighted_mse_numpy(
+    predictions: np.ndarray,
+    targets: np.ndarray,
+    weights: np.ndarray,
+) -> float:
+    error = (predictions - targets) ** 2
+    weighted_error = error * weights.reshape(1, -1)
+    return float(weighted_error.mean())
 
 # Functions necessary for rnn/lstm model
 # build preprocessor for LSTM model
@@ -404,7 +253,7 @@ def build_lstm_preprocessor() -> ColumnTransformer:
         "day_of_week_cos",
         "month_sin",
         "month_cos",
-    ]   
+    ]
     categorical_features = ["day_of_week"]
 
     preprocessor = ColumnTransformer(
@@ -421,7 +270,7 @@ def build_lstm_preprocessor() -> ColumnTransformer:
         remainder="drop"
     )
 
-    return preprocessor 
+    return preprocessor
 
 # This ensures all rows in a sequence fed into the model are continuous
 # It returns an array of dataframes, where each dataframe is a continuous sequence of rows with no gaps in the date_hour column.
@@ -430,7 +279,7 @@ def split_into_continuous_segments(df: pd.DataFrame) -> list[pd.DataFrame]:
 
     df["date_hour"] = pd.to_datetime(df["date_hour"])
     df["time_diff"] = df["date_hour"].diff().dt.total_seconds() / 3600
-    
+
     # Start a new sequence whenever the time difference between consecutive rows is over 1 hour
     df["segment_id"] = (df["time_diff"] > 1).cumsum()
 
@@ -439,24 +288,36 @@ def split_into_continuous_segments(df: pd.DataFrame) -> list[pd.DataFrame]:
     for _, seg in df.groupby("segment_id"):
         seg = seg.drop(columns=["time_diff", "segment_id"])
         if len(seg) >= 121:
-            segments.append(seg)    
+            segments.append(seg)
 
     return segments
 
-# Create sliding window sequences within each segment, separating features and target and returning feature and target arrays suitable for RNN/LSTM 
-def build_sequences(segments: list[pd.DataFrame], feature_cols: list[str], target_col: str, seq_length:int = 48, horizon:int = 72):
-    X, y = [], []
+# Create sliding window sequences within each segment, separating features and target and returning feature and target arrays suitable for RNN/LSTM
+def build_sequences(
+    segments: list[pd.DataFrame],
+    feature_cols: list[str],
+    target_col: str,
+    seq_length: int = SEQUENCE_LENGTH,
+    horizon: int = FORECAST_HORIZON,
+    weekly_lag_hours: int | None = None,
+):
+    X, y, naive_weekly_predictions = [], [], []
+    min_history = max(seq_length, weekly_lag_hours or 0)
 
     for seg in segments:
         features = seg[feature_cols].values
         target = seg[target_col].values
 
-        for i in range(seq_length, len(seg) - horizon + 1):
+        for i in range(min_history, len(seg) - horizon + 1):
             # the features window for one sample/window is the previous seq_length rows(48), and the target is the next horizon(72) rows after that
             X.append(features[i-seq_length:i])
             y.append(target[i:i+horizon])
-    
-    return np.array(X), np.array(y)
+            if weekly_lag_hours is not None:
+                naive_weekly_predictions.append(target[i-weekly_lag_hours:i-weekly_lag_hours+horizon])
+
+    if weekly_lag_hours is not None:
+        return np.array(X), np.array(y), np.array(naive_weekly_predictions)
+    return np.array(X), np.array(y), None
 
 # Create pytorch traffic dataset for RNN/LSTM
 class TrafficDataset(Dataset):
@@ -469,12 +330,12 @@ class TrafficDataset(Dataset):
 
     def __getitem__(self, idx):
         return self.X[idx], self.y[idx]
-    
+
 # Define LSTM model for traffic prediction
 class TrafficLSTM(nn.Module):
     def __init__(self, input_size, hidden_size=128, horizon=72):
         super().__init__()
-       
+
         self.lstm = nn.LSTM(input_size=input_size, hidden_size=hidden_size, num_layers=2, dropout=0.2, batch_first=True)
         self.fc = nn.Linear(hidden_size, horizon)
 
@@ -492,43 +353,41 @@ def weighted_mse(predictions, targets, weights):
 
 def train_lstm_model(X, y, epochs=25, batch_size=128):
     dataset = TrafficDataset(X, y)
-    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, drop_last=True)
+    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False, drop_last=True)
 
     model = TrafficLSTM(input_size=X.shape[2])
 
     # Create weights for custom loss function to prioritize accuracy nearer to the current time point
     horizon = y.shape[1]
-    weights = torch.linspace(1.0, 0.3, steps=horizon)
-    weights = weights / weights.sum()
+    weights = torch.tensor(build_horizon_weights(horizon), dtype=torch.float32)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
     for epoch in range(epochs):
-        
+
         epoch_loss = 0.0
 
         for batch_X, batch_y in dataloader:
             optimizer.zero_grad()
             predictions = model(batch_X)
-            loss = weighted_mse(predictions, batch_y, weights=weights)
+            loss = weighted_mse(predictions, batch_y, weights=weights.to(predictions.device))
             loss.backward()
             optimizer.step()
             epoch_loss += loss.item()
 
         print(f"Epoch {epoch+1}/{epochs}, Loss: {epoch_loss:.5f}")
-    
+
     return model
 
 
-def create_model_card(model_name: str, metrics: dict, model_type: str = "random_forest") -> str:
+def create_model_card(model_name: str, metrics: dict) -> str:
     """Create a README.md model card for Hugging Face."""
     card = f"""---
 tags:
 - traffic-prediction
-- sklearn
 - pytorch
 - time-series
-library_name: {'sklearn' if model_type == 'random_forest' else 'pytorch'}
+library_name: pytorch
 ---
 
 # {model_name}
@@ -537,7 +396,7 @@ library_name: {'sklearn' if model_type == 'random_forest' else 'pytorch'}
 This model predicts traffic counts for Snowbasin ski resort based on time, weather, and historical traffic data.
 
 ## Model Type
-{model_type.upper()}
+LSTM Neural Network
 
 ## Performance Metrics
 - RMSE: {metrics.get('rmse', 'N/A')}
@@ -553,20 +412,6 @@ The model uses the following features:
 
 ## Usage
 
-### Random Forest Model
-```python
-import joblib
-from huggingface_hub import hf_hub_download
-
-# Download model
-model_path = hf_hub_download(repo_id="YOUR_USERNAME/{model_name}", filename="champion_model.joblib")
-model = joblib.load(model_path)
-
-# Make predictions
-predictions = model.predict(X)
-```
-
-### LSTM Model
 ```python
 import torch
 from huggingface_hub import hf_hub_download
@@ -575,7 +420,7 @@ from huggingface_hub import hf_hub_download
 model_path = hf_hub_download(repo_id="YOUR_USERNAME/{model_name}", filename="champion_lstm.pth")
 
 # Load model architecture (you'll need the TrafficLSTM class)
-model = TrafficLSTM(input_size=33)  # Adjust input_size based on your features
+model = TrafficLSTM(input_size=34)  # Adjust input_size based on your features
 model.load_state_dict(torch.load(model_path))
 model.eval()
 ```
@@ -597,17 +442,7 @@ def push_to_huggingface(
     hf_token: str | None = None,
     private: bool = False,
 ) -> str:
-    """Push model artifacts to Hugging Face Hub.
-
-    Args:
-        model_dir: Directory containing model artifacts
-        repo_name: Name of the HuggingFace repository (e.g., 'username/model-name')
-        hf_token: HuggingFace API token (if None, will use HF_TOKEN env variable)
-        private: Whether to create a private repository
-
-    Returns:
-        URL of the uploaded model repository
-    """
+    """Push model artifacts to Hugging Face Hub."""
     if hf_token is None:
         hf_token = os.environ.get("HF_TOKEN")
         if hf_token is None:
@@ -617,7 +452,6 @@ def push_to_huggingface(
 
     api = HfApi()
 
-    # Create repository if it doesn't exist
     try:
         create_repo(
             repo_id=repo_name,
@@ -630,7 +464,6 @@ def push_to_huggingface(
         print(f"Error creating repository: {e}")
         raise
 
-    # Upload all files in the model directory
     try:
         api.upload_folder(
             folder_path=str(model_dir),
@@ -681,7 +514,7 @@ def train_and_evaluate(
     # preprocess data for LSTM
     # Split into train and test
     train_raw_df, test_raw_df = train_test_split(engineered, test_size=test_size, shuffle=False)
-    
+
     # Preprocess Features (Scale and impute)
     preprocessor = build_lstm_preprocessor()
     # Fit preprocessor on train data and transform train data
@@ -715,20 +548,22 @@ def train_and_evaluate(
 
     feature_columns = train_lstm_df.columns.drop([TARGET_COLUMN, "date_hour"]).tolist()
 
-    X_train_seq, y_train_seq = build_sequences(
+    X_train_seq, y_train_seq, _ = build_sequences(
         train_segments,
         feature_columns,
-        TARGET_COLUMN
+        TARGET_COLUMN,
+        weekly_lag_hours=WEEKLY_LAG_HOURS,
     )
 
-    X_test_seq, y_test_seq = build_sequences(
+    X_test_seq, y_test_seq, y_test_weekly_naive = build_sequences(
         test_segments,
         feature_columns,
-        TARGET_COLUMN
+        TARGET_COLUMN,
+        weekly_lag_hours=WEEKLY_LAG_HOURS,
     )
 
-    print(f"Built {len(X_train_seq)} training sequences and {len(X_test_seq)} testing sequences of length 48 hours with a 72 hour horizon for RNN/LSTM model.")
-    
+    print(f"Built {len(X_train_seq)} training sequences and {len(X_test_seq)} testing sequences of length 48 hours with a 72 hour horizon for LSTM model.")
+
     # Train and Save LSTM model
     lstm_model = train_lstm_model(X_train_seq, y_train_seq)
     torch.save(lstm_model.state_dict(), model_dir / "champion_lstm.pth")
@@ -770,63 +605,77 @@ def train_and_evaluate(
 
     y_pred_lstm = target_scaler.inverse_transform(
         lstm_predictions.reshape(-1,1)
-    ).flatten() 
+    ).flatten()
+
+    y_pred_weekly_naive = target_scaler.inverse_transform(
+        y_test_weekly_naive.reshape(-1, 1)
+    ).flatten()
 
     lstm_rmse = np.sqrt(mean_squared_error(y_true_lstm, y_pred_lstm))
     lstm_mae = mean_absolute_error(y_true_lstm, y_pred_lstm)
     lstm_r2 = r2_score(y_true_lstm, y_pred_lstm)
+    weekly_naive_rmse = np.sqrt(mean_squared_error(y_true_lstm, y_pred_weekly_naive))
+    weekly_naive_mae = mean_absolute_error(y_true_lstm, y_pred_weekly_naive)
+    weekly_naive_r2 = r2_score(y_true_lstm, y_pred_weekly_naive)
+
+    horizon_weights = build_horizon_weights(y_test_seq.shape[1])
+
+    # Inverse transform full sequences to preserve shape
+    y_true_seq_original = target_scaler.inverse_transform(
+        y_test_seq.reshape(-1, 1)
+    ).reshape(y_test_seq.shape)
+
+    y_pred_seq_original = target_scaler.inverse_transform(
+        lstm_predictions.reshape(-1, 1)
+    ).reshape(lstm_predictions.shape)
+
+    y_naive_seq_original = target_scaler.inverse_transform(
+        y_test_weekly_naive.reshape(-1, 1)
+    ).reshape(y_test_weekly_naive.shape)
+
+    # Get weighted MSE in real units
+    lstm_weighted_mse = weighted_mse_numpy(
+        y_pred_seq_original,
+        y_true_seq_original,
+        horizon_weights
+    )
+
+    weekly_naive_weighted_mse = weighted_mse_numpy(
+        y_naive_seq_original,
+        y_true_seq_original,
+        horizon_weights
+    )
+
+    # Horizon-wise RMSE (without flattening) to see how accuracy changes across the 72 hour horizon for both LSTM and weekly naive predictions
+    rmse_per_horizon_lstm = np.sqrt(
+        ((y_pred_seq_original - y_true_seq_original) ** 2).mean(axis=0)
+    )
+
+    rmse_per_horizon_naive = np.sqrt(
+        ((y_naive_seq_original - y_true_seq_original) ** 2).mean(axis=0)
+    )
 
     print("LSTM RMSE:", lstm_rmse)
     print("LSTM MAE:", lstm_mae)
     print("LSTM R2:", lstm_r2)
+    print("LSTM weighted MSE:", lstm_weighted_mse)
+    print("Weekly naive RMSE:", weekly_naive_rmse)
+    print("Weekly naive MAE:", weekly_naive_mae)
+    print("Weekly naive R2:", weekly_naive_r2)
+    print("Weekly naive weighted MSE:", weekly_naive_weighted_mse)
+    print("LSTM RMSE per horizon:", rmse_per_horizon_lstm)
+    print("Weekly naive RMSE per horizon:", rmse_per_horizon_naive)
 
-    split_results = evaluate_split(
-        features=features,
-        target=target,
-        timestamps=engineered["date_hour"],
-        test_size=test_size,
-        split_strategy=split_strategy,
-    )
-
-    comparison_results: dict[str, float | str] = {}
-    if compare_with_time_split and split_strategy == "random":
-        time_results = evaluate_split(
-            features=features,
-            target=target,
-            timestamps=engineered["date_hour"],
-            test_size=test_size,
-            split_strategy="time",
-        )
-        comparison_results = {
-            "time_split_champion_rmse": float(time_results["champion_rmse"]),
-            "time_split_champion_mae": float(time_results["champion_mae"]),
-            "time_split_champion_r2": float(time_results["champion_r2"]),
-            "random_minus_time_rmse": float(split_results["champion_rmse"])
-            - float(time_results["champion_rmse"]),
-            "random_minus_time_mae": float(split_results["champion_mae"])
-            - float(time_results["champion_mae"]),
-            "random_minus_time_r2": float(split_results["champion_r2"])
-            - float(time_results["champion_r2"]),
-        }
-
-    artifact_path = model_dir / "champion_model.joblib"
-    joblib.dump(split_results["pipeline"], artifact_path)
 
     metrics_df = pd.DataFrame(
         [
             {
-                "split_strategy": split_results["split_strategy"],
-                "model": "baseline_dummy_mean",
-                "rmse": split_results["baseline_rmse"],
-                "mae": split_results["baseline_mae"],
-                "r2": split_results["baseline_r2"],
-            },
-            {
-                "split_strategy": split_results["split_strategy"],
-                "model": "champion_random_forest",
-                "rmse": split_results["champion_rmse"],
-                "mae": split_results["champion_mae"],
-                "r2": split_results["champion_r2"],
+                "split_strategy": "sequence",
+                "model": "baseline_weekly_naive",
+                "rmse": weekly_naive_rmse,
+                "mae": weekly_naive_mae,
+                "r2": weekly_naive_r2,
+                "weighted_mse": weekly_naive_weighted_mse,
             },
             {
                 "split_strategy": "sequence",
@@ -834,76 +683,42 @@ def train_and_evaluate(
                 "rmse": lstm_rmse,
                 "mae": lstm_mae,
                 "r2": lstm_r2,
+                "weighted_mse": lstm_weighted_mse,
             }
         ]
     )
     metrics_file = results_dir / "model_metrics.csv"
     metrics_df.to_csv(metrics_file, index=False)
 
-    plt.figure(figsize=(8, 6))
-    plt.scatter(split_results["y_test"], split_results["champion_predictions"], alpha=0.3)
-    lower = min(
-        float(split_results["y_test"].min()),
-        float(min(split_results["champion_predictions"])),
-    )
-    upper = max(
-        float(split_results["y_test"].max()),
-        float(max(split_results["champion_predictions"])),
-    )
-    plt.plot([lower, upper], [lower, upper], linestyle="--")
-    plt.xlabel("Actual traffic_count_total")
-    plt.ylabel("Predicted traffic_count_total")
-    plt.title("Actual vs Predicted Traffic")
-    actual_plot = results_dir / "actual_vs_predicted.svg"
-    plt.tight_layout()
-    plt.savefig(actual_plot)
-    plt.close()
+    horizon_df = pd.DataFrame({
+    "horizon_step": np.arange(1, len(rmse_per_horizon_lstm) + 1),
+    "lstm_rmse": rmse_per_horizon_lstm,
+    "naive_rmse": rmse_per_horizon_naive,
+    })
 
-    residuals = split_results["y_test"] - split_results["champion_predictions"]
-    plt.figure(figsize=(8, 6))
-    plt.scatter(split_results["champion_predictions"], residuals, alpha=0.3)
-    plt.axhline(0.0, linestyle="--")
-    plt.xlabel("Predicted traffic_count_total")
-    plt.ylabel("Residual (actual - predicted)")
-    plt.title("Residual Plot")
-    residual_plot = results_dir / "residual_plot.svg"
-    plt.tight_layout()
-    plt.savefig(residual_plot)
-    plt.close()
+    horizon_file = results_dir / "horizon_rmse.csv"
+    horizon_df.to_csv(horizon_file, index=False)
 
     summary = {
-        "split_strategy": split_results["split_strategy"],
-        "train_rows": split_results["train_rows"],
-        "test_rows": split_results["test_rows"],
+        "split_strategy": "sequence",
+        "train_rows": len(X_train_seq),
+        "test_rows": len(X_test_seq),
         "dropped_target_rows": dropped_target_rows,
-        "baseline_rmse": split_results["baseline_rmse"],
-        "baseline_mae": split_results["baseline_mae"],
-        "champion_rmse": split_results["champion_rmse"],
-        "champion_mae": split_results["champion_mae"],
-        "champion_r2": split_results["champion_r2"],
-        "model_artifact": str(artifact_path),
-        "metrics_file": str(metrics_file),
-        "actual_vs_predicted_plot": str(actual_plot),
-        "residual_plot": str(residual_plot),
+        "baseline_weekly_naive_rmse": weekly_naive_rmse,
+        "baseline_weekly_naive_mae": weekly_naive_mae,
+        "baseline_weekly_naive_r2": weekly_naive_r2,
+        "baseline_weekly_naive_weighted_mse": weekly_naive_weighted_mse,
+        "lstm_rmse": lstm_rmse,
+        "lstm_mae": lstm_mae,
+        "lstm_r2": lstm_r2,
+        "lstm_weighted_mse": lstm_weighted_mse,
+        "metrics_file": str(metrics_file)
     }
-    summary.update(comparison_results)
-
     summary_file = results_dir / "training_summary.json"
     summary_file.write_text(json.dumps(summary, indent=2), encoding='utf-8')
     summary["summary_file"] = str(summary_file)
 
-    # Create and save model cards for Hugging Face
-    rf_metrics = {
-        "rmse": split_results["champion_rmse"],
-        "mae": split_results["champion_mae"],
-        "r2": split_results["champion_r2"],
-        "split_strategy": split_results["split_strategy"],
-        "train_rows": split_results["train_rows"],
-        "test_rows": split_results["test_rows"],
-    }
-    rf_card = create_model_card("snowbasin-traffic-rf", rf_metrics, "random_forest")
-    (model_dir / "README_rf.md").write_text(rf_card, encoding='utf-8')
-
+    # Create model card for Hugging Face
     lstm_metrics = {
         "rmse": lstm_rmse,
         "mae": lstm_mae,
@@ -912,7 +727,7 @@ def train_and_evaluate(
         "train_rows": len(X_train_seq),
         "test_rows": len(X_test_seq),
     }
-    lstm_card = create_model_card("snowbasin-traffic-lstm", lstm_metrics, "lstm")
+    lstm_card = create_model_card("snowbasin-traffic-lstm", lstm_metrics)
     (model_dir / "README_lstm.md").write_text(lstm_card, encoding='utf-8')
 
     # Push to Hugging Face if requested
@@ -920,32 +735,15 @@ def train_and_evaluate(
         if hf_repo_name is None:
             raise ValueError("hf_repo_name must be provided when push_to_hf=True")
 
-        # Create separate directories for each model type
-        rf_dir = model_dir / "random_forest"
+        # Create LSTM directory with all artifacts
         lstm_dir = model_dir / "lstm"
-        rf_dir.mkdir(parents=True, exist_ok=True)
         lstm_dir.mkdir(parents=True, exist_ok=True)
 
-        # Copy Random Forest artifacts
-        import shutil
-        shutil.copy(model_dir / "champion_model.joblib", rf_dir / "champion_model.joblib")
-        shutil.copy(model_dir / "README_rf.md", rf_dir / "README.md")
-
-        # Copy LSTM artifacts
         shutil.copy(model_dir / "champion_lstm.pth", lstm_dir / "champion_lstm.pth")
         shutil.copy(model_dir / "lstm_preprocessor.joblib", lstm_dir / "lstm_preprocessor.joblib")
         shutil.copy(model_dir / "lstm_target_scaler.joblib", lstm_dir / "lstm_target_scaler.joblib")
         shutil.copy(model_dir / "lstm_config.json", lstm_dir / "lstm_config.json")
         shutil.copy(model_dir / "README_lstm.md", lstm_dir / "README.md")
-
-        # Upload Random Forest model
-        try:
-            rf_repo = f"{hf_repo_name}-random-forest"
-            rf_url = push_to_huggingface(rf_dir, rf_repo, hf_token, hf_private)
-            summary["huggingface_rf_url"] = rf_url
-        except Exception as e:
-            print(f"Failed to upload Random Forest model: {e}")
-            summary["huggingface_rf_error"] = str(e)
 
         # Upload LSTM model
         try:
@@ -989,7 +787,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--hf-repo-name",
         type=str,
-        help="Base name for Hugging Face repositories (e.g., 'username/snowbasin-traffic'). Will create two repos: *-random-forest and *-lstm",
+        help="Base name for Hugging Face repository (e.g., 'username/snowbasin-traffic'). Will create *-lstm repo.",
     )
     parser.add_argument(
         "--hf-token",

@@ -6,7 +6,6 @@ export type SpaceStatus = "online" | "warming" | "offline" | "unknown";
 interface SpaceHealth {
   status: SpaceStatus;
   models: {
-    random_forest: boolean;
     lstm: boolean;
   } | null;
   training_data: boolean | null;

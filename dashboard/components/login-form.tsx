@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
-import { Loader2, User } from "lucide-react";
+import { Loader2, User, Shield } from "lucide-react";
 import { toast } from "sonner";
 
 const containerVariants: Variants = {
@@ -114,12 +114,12 @@ export function LoginForm({
       animate="visible"
     >
       <motion.div variants={itemVariants}>
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden bg-white/5 backdrop-blur-xl border-white/10">
           <CardHeader className="text-center pb-4">
-            <CardTitle className="text-xl bg-linear-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+            <CardTitle className="text-xl bg-linear-to-r from-blue-300 to-cyan-300 bg-clip-text text-transparent">
               Welcome back
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-white/70">
               Sign in with your Google or GitHub account
             </CardDescription>
           </CardHeader>
@@ -133,7 +133,7 @@ export function LoginForm({
                       type="button"
                       disabled={oauthLoading !== null}
                       onClick={() => handleOAuthLogin("google")}
-                      className="transition-all hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-blue-300"
+                      className="transition-all hover:bg-white/10 border-white/10 text-white/70 hover:border-blue-300"
                     >
                       {oauthLoading === "google" ? (
                         <Loader2 className="h-5 w-5 animate-spin" />
@@ -152,7 +152,7 @@ export function LoginForm({
                       type="button"
                       disabled={oauthLoading !== null}
                       onClick={() => handleOAuthLogin("github")}
-                      className="transition-all hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-blue-300"
+                      className="transition-all hover:bg-white/10 border-white/10 text-white/70 hover:border-blue-300"
                     >
                       {oauthLoading === "github" ? (
                         <Loader2 className="h-5 w-5 animate-spin" />
@@ -167,7 +167,7 @@ export function LoginForm({
                 </motion.div>
 
                 <motion.div variants={itemVariants}>
-                  <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">
+                  <FieldSeparator className="*:data-[slot=field-separator-content]:bg-transparent">
                     Or continue with email
                   </FieldSeparator>
                 </motion.div>
@@ -244,7 +244,7 @@ export function LoginForm({
         <Link href="/guest">
           <Button
             variant="outline"
-            className="w-full gap-2 border-blue-200 hover:bg-blue-50 dark:border-blue-800 dark:hover:bg-blue-950/50"
+            className="w-full gap-2 border-white/10 hover:bg-white/10 text-white/70"
           >
             <User className="h-4 w-4" />
             Continue as Guest
@@ -253,16 +253,13 @@ export function LoginForm({
       </motion.div>
 
       <motion.div variants={itemVariants}>
-        <FieldDescription className="px-6 text-center">
-          By signing in, you agree to our{" "}
-          <Link href="#" className="text-blue-500 hover:text-blue-600">
-            Terms of Service
-          </Link>{" "}
-          and{" "}
-          <Link href="#" className="text-blue-500 hover:text-blue-600">
-            Privacy Policy
-          </Link>
-          .
+        <FieldDescription className="px-6 text-center text-white/60">
+          <span className="flex items-center justify-center gap-1.5 mb-1">
+            <Shield className="h-3.5 w-3.5 text-green-400" />
+            <span className="text-white/70 font-medium">Your data stays private</span>
+          </span>
+          We only store your chat history to improve your experience.
+          No data is shared with third parties.
         </FieldDescription>
       </motion.div>
     </motion.div>

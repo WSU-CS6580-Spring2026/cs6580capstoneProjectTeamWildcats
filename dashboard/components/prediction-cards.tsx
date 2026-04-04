@@ -291,7 +291,7 @@ function TrafficCard({ traffic }: { traffic: TrafficData }) {
       {/* Confidence badge */}
       <div className="border-t px-4 py-2 flex items-center justify-between">
         <span className="text-[10px] text-muted-foreground">
-          {isLstm ? "🧠 LSTM" : "🌲 Random Forest"} prediction
+          {isLstm ? "📊 Deep Analysis" : "⚡ Quick Forecast"}
         </span>
         <span className="text-[10px] font-medium text-muted-foreground capitalize">
           Confidence: {traffic.confidence}

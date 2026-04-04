@@ -143,10 +143,10 @@ function SunRays() {
 function FrostOverlay() {
   return (
     <>
-      <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-white/30 dark:from-cyan-200/5 to-transparent pointer-events-none" />
-      <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-white/20 dark:from-blue-200/5 to-transparent pointer-events-none" />
-      <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-white/20 dark:from-cyan-200/5 to-transparent pointer-events-none" />
-      <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-white/20 dark:from-cyan-200/5 to-transparent pointer-events-none" />
+      <div className="absolute inset-x-0 top-0 h-32 bg-linear-to-b from-white/30 dark:from-cyan-200/5 to-transparent pointer-events-none" />
+      <div className="absolute inset-x-0 bottom-0 h-32 bg-linear-to-t from-white/20 dark:from-blue-200/5 to-transparent pointer-events-none" />
+      <div className="absolute inset-y-0 left-0 w-24 bg-linear-to-r from-white/20 dark:from-cyan-200/5 to-transparent pointer-events-none" />
+      <div className="absolute inset-y-0 right-0 w-24 bg-linear-to-l from-white/20 dark:from-cyan-200/5 to-transparent pointer-events-none" />
     </>
   );
 }
@@ -269,7 +269,7 @@ function WeatherBackgroundComponent() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 1.2 }}
-            className={`fixed inset-0 z-0 bg-gradient-to-br ${gradient} ${glow}`}
+            className={`fixed inset-0 z-0 bg-linear-to-br ${gradient} ${glow}`}
             aria-hidden="true"
           >
             {/* Particle effects based on condition */}

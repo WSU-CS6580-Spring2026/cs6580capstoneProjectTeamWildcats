@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { streamChatResponse, generateChatTitle } from "@/lib/claude";
+import { streamChatResponse, generateChatTitle } from "@/lib/ai";
 import {
   getServiceAlerts,
   getStopArrivals,
@@ -17,7 +17,7 @@ import {
   formatWeatherStationsResponse,
 } from "@/lib/udot";
 
-// ─── Prediction helpers ───────────────────────────────────────────────────────
+// Prediction helpers
 
 const HF_FASTAPI_URL =
   process.env.HF_FASTAPI_URL ||
@@ -217,7 +217,7 @@ function hasEnoughInfoToPredict(
 
   const hasDay = Object.keys(DAY_MAP).some((d) => allUserText.includes(d)) || allUserText.includes("today") || allUserText.includes("tomorrow");
   const hasTime = /\b\d{1,2}\s*(am|pm)\b/.test(allUserText) || /\bright now\b/.test(allUserText.replace(/snowbasin/g, "")) || allUserText.includes("current");
-  const wantsDefaults = /typical|default|usual|average|use (?:rf|random forest|lstm|the model)|just predict|go ahead|yes.*(?:use|go)|sure|ok/.test(allUserText);
+  const wantsDefaults = /typical|default|usual|average|use (?:lstm|the model)|just predict|go ahead|yes.*(?:use|go)|sure|ok/.test(allUserText);
 
   return hasDay || hasTime || wantsDefaults;
 }
@@ -237,7 +237,7 @@ async function fetchPredictionIfNeeded(
   if (!hasEnoughInfoToPredict(content, previousMessages)) return { text: "" };
 
   const params = extractPredictionParams(content, previousMessages);
-  const modelLabel = model === "lstm" ? "LSTM" : "Random Forest";
+  const modelLabel = "LSTM";
 
   // Track what was explicitly specified vs defaulted
   const currentLowerCheck = content.toLowerCase();
@@ -255,7 +255,7 @@ async function fetchPredictionIfNeeded(
     const res = await fetch(`${HF_FASTAPI_URL}/predict`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...params, model: model === "lstm" ? "lstm" : "random-forest" }),
+      body: JSON.stringify({ ...params, model: "lstm" }),
       signal: AbortSignal.timeout(15000),
       cache: "no-store",
     });
@@ -282,13 +282,45 @@ async function fetchPredictionIfNeeded(
     const predHour = actualParams.hour || params.hour;
     const predMonth = actualParams.month || params.month;
     const utahNow = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Denver" }));
-    const targetDayIndex = DAY_NAMES.indexOf((predDay as string).toLowerCase());
-    const currentDayIndex = utahNow.getDay() === 0 ? 6 : utahNow.getDay() - 1; // convert Sun=0 to Mon=0 format
-    let daysAhead = targetDayIndex - currentDayIndex;
-    if (daysAhead < 0) daysAhead += 7;
-    if (daysAhead === 0 && predHour < utahNow.getHours()) daysAhead = 7; // next week if time already passed
-    const targetDate = new Date(utahNow);
-    targetDate.setDate(targetDate.getDate() + daysAhead);
+
+    // Build target date: if the user specified a month different from current, find the correct date in that month
+    let targetDate: Date;
+    const requestedMonth = Number(predMonth); // 1-12
+    const currentMonth = utahNow.getMonth() + 1; // 1-12
+
+    if (requestedMonth !== currentMonth) {
+      // User asked for a different month — find the matching day-of-week in that month
+      const targetDayIndex = DAY_NAMES.indexOf((predDay as string).toLowerCase());
+      const jsDay = targetDayIndex === 6 ? 0 : targetDayIndex + 1; // convert Mon=0 to Sun=0 JS format
+      let year = utahNow.getFullYear();
+      if (requestedMonth < currentMonth) year += 1; // next year if month already passed
+      // Find first occurrence of that day-of-week in the requested month
+      targetDate = new Date(year, requestedMonth - 1, 1);
+      while (targetDate.getDay() !== jsDay) {
+        targetDate.setDate(targetDate.getDate() + 1);
+      }
+      // If user specified a specific date number, try to use it
+      const userDateMatch = content.match(/\b(\d{1,2})\b/);
+      if (userDateMatch) {
+        const dayNum = parseInt(userDateMatch[1]);
+        if (dayNum >= 1 && dayNum <= 31) {
+          const candidate = new Date(year, requestedMonth - 1, dayNum);
+          if (candidate.getMonth() === requestedMonth - 1) {
+            targetDate = candidate;
+          }
+        }
+      }
+    } else {
+      // Same month — find the next matching day-of-week from today
+      const targetDayIndex = DAY_NAMES.indexOf((predDay as string).toLowerCase());
+      const currentDayIndex = utahNow.getDay() === 0 ? 6 : utahNow.getDay() - 1; // Sun=0 → Mon=0
+      let daysAhead = targetDayIndex - currentDayIndex;
+      if (daysAhead < 0) daysAhead += 7;
+      if (daysAhead === 0 && Number(predHour) < utahNow.getHours()) daysAhead = 7;
+      targetDate = new Date(utahNow);
+      targetDate.setDate(targetDate.getDate() + daysAhead);
+    }
+
     const formattedDate = targetDate.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
     const formattedTime = `${Number(predHour) % 12 || 12}:00 ${Number(predHour) >= 12 ? "PM" : "AM"}`;
 
@@ -332,14 +364,14 @@ async function fetchPredictionIfNeeded(
   }
 }
 
-// ─── Route handlers ───────────────────────────────────────────────────────────
+// Route handlers
 
 export async function POST(request: Request) {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
-    const { chatId, content, guest, model = "random-forest", previousMessages: guestPrevMessages, userCoordinates } = await request.json();
+    const { chatId, content, guest, model = "lstm", previousMessages: guestPrevMessages, userCoordinates } = await request.json();
 
     if (!content) {
       return new Response("Message content is required", { status: 400 });
@@ -582,7 +614,7 @@ async function handleGuestChat(
 
   const encoder = new TextEncoder();
 
-  // Build full message history for Claude context
+  // Build full message history for AI context
   const allMessages = [...messagesForContext, { role: "user" as const, content }];
 
   const stream = new ReadableStream({
@@ -622,7 +654,7 @@ async function handleGuestChat(
   });
 }
 
-// ─── Data fetchers ────────────────────────────────────────────────────────────
+// Data fetchers
 
 async function fetchTransitDataIfNeeded(content: string): Promise<string> {
   const transitKeywords = [

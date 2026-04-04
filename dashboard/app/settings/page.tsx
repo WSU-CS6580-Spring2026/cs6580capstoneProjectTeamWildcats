@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, type Variants } from "framer-motion";
@@ -26,9 +26,6 @@ import {
   Camera,
   ImageIcon,
 } from "lucide-react";
-import { SnowAnimation } from "@/components/snow-animation";
-import { SnowToggle } from "@/components/snow-toggle";
-import { useSnow } from "@/hooks/use-snow";
 import { toast } from "sonner";
 
 const containerVariants: Variants = {
@@ -64,7 +61,6 @@ interface Identity {
 export default function SettingsPage() {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
-  const { snowEnabled, toggleSnow } = useSnow();
   const supabase = createClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -300,14 +296,11 @@ export default function SettingsPage() {
     .slice(0, 2);
 
   return (
-    <div className="relative min-h-svh bg-muted">
-      {snowEnabled && <SnowAnimation />}
+    <main id="main-content" className="relative min-h-svh overflow-hidden">
+      {/* Background */}
+      <div className="fixed inset-0 bg-linear-to-br from-slate-950 via-indigo-950 to-slate-900" />
 
-      <div className="absolute top-4 right-4 z-20">
-        <SnowToggle enabled={snowEnabled} onToggle={toggleSnow} />
-      </div>
-
-      <div className="container max-w-2xl mx-auto py-8 px-4">
+      <div className="container max-w-2xl mx-auto py-8 px-4 relative z-10">
         <motion.div
           className="flex flex-col gap-6"
           variants={containerVariants}
@@ -317,35 +310,35 @@ export default function SettingsPage() {
           {/* Header */}
           <motion.div variants={itemVariants} className="flex items-center gap-4">
             <Link href="/">
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" className="text-white/70 hover:bg-white/10 hover:text-white">
                 <ArrowLeft className="h-5 w-5" />
               </Button>
             </Link>
             <div>
-              <h1 className="text-2xl font-bold">Settings</h1>
-              <p className="text-muted-foreground text-sm">Manage your account settings</p>
+              <h1 className="text-2xl font-bold text-white">Settings</h1>
+              <p className="text-white/70 text-sm">Manage your account settings</p>
             </div>
           </motion.div>
 
           {/* Profile Card with Avatar Upload */}
           <motion.div variants={itemVariants}>
-            <Card>
+            <Card className="bg-white/5 backdrop-blur-xl border-white/10">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
+                <CardTitle className="flex items-center gap-2 text-lg text-white">
                   <User className="h-5 w-5" />
                   Profile
                 </CardTitle>
-                <CardDescription>Update your profile information</CardDescription>
+                <CardDescription className="text-white/70">Update your profile information</CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleUpdateProfile}>
                   <FieldGroup>
                     {/* Avatar Upload */}
                     <Field>
-                      <FieldLabel>Profile Picture</FieldLabel>
+                      <FieldLabel className="text-white">Profile Picture</FieldLabel>
                       <div className="flex items-center gap-4">
                         <div className="relative group">
-                          <Avatar className="h-20 w-20 border-2 border-muted">
+                          <Avatar className="h-20 w-20 border-2 border-white/10">
                             <AvatarImage src={avatarUrl || undefined} />
                             <AvatarFallback className="text-xl">{userInitials}</AvatarFallback>
                           </Avatar>
@@ -376,11 +369,12 @@ export default function SettingsPage() {
                             size="sm"
                             onClick={() => fileInputRef.current?.click()}
                             disabled={avatarLoading}
+                            className="text-white/70 border-white/10 hover:bg-white/10"
                           >
                             <ImageIcon className="h-4 w-4 mr-2" />
                             {avatarLoading ? "Uploading..." : "Change Photo"}
                           </Button>
-                          <p className="text-xs text-muted-foreground mt-1">
+                          <p className="text-xs text-white/60 mt-1">
                             JPG, PNG or GIF. Max 2MB.
                           </p>
                         </div>
@@ -389,7 +383,7 @@ export default function SettingsPage() {
 
                     {/* Name */}
                     <Field>
-                      <FieldLabel htmlFor="name">Display Name</FieldLabel>
+                      <FieldLabel htmlFor="name" className="text-white">Display Name</FieldLabel>
                       <Input
                         id="name"
                         type="text"
@@ -401,20 +395,20 @@ export default function SettingsPage() {
 
                     {/* Email (read-only here) */}
                     <Field>
-                      <FieldLabel htmlFor="profile-email">Email</FieldLabel>
+                      <FieldLabel htmlFor="profile-email" className="text-white">Email</FieldLabel>
                       <Input
                         id="profile-email"
                         type="email"
                         value={user.email || ""}
                         disabled
-                        className="bg-muted"
+                        className="bg-white/5"
                       />
-                      <FieldDescription>
+                      <FieldDescription className="text-white/70">
                         Your email address associated with this account.
                       </FieldDescription>
                     </Field>
 
-                    <Button type="submit" disabled={profileLoading}>
+                    <Button type="submit" disabled={profileLoading} className="bg-blue-500 hover:bg-blue-600 text-white">
                       {profileLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                       Save Changes
                     </Button>
@@ -426,13 +420,13 @@ export default function SettingsPage() {
 
           {/* Change/Add Password */}
           <motion.div variants={itemVariants}>
-            <Card>
+            <Card className="bg-white/5 backdrop-blur-xl border-white/10">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
+                <CardTitle className="flex items-center gap-2 text-lg text-white">
                   <Key className="h-5 w-5" />
                   {hasOAuthOnly ? "Add Password" : "Change Password"}
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-white/70">
                   {hasOAuthOnly
                     ? "Add a password to enable email login alongside your social account"
                     : "Update your password"}
@@ -442,7 +436,7 @@ export default function SettingsPage() {
                 <form onSubmit={handleUpdatePassword}>
                   <FieldGroup>
                     <Field>
-                      <FieldLabel htmlFor="new-password">
+                      <FieldLabel htmlFor="new-password" className="text-white">
                         {hasOAuthOnly ? "Password" : "New Password"}
                       </FieldLabel>
                       <PasswordInput
@@ -456,7 +450,7 @@ export default function SettingsPage() {
                       <PasswordStrength password={newPassword} />
                     </Field>
                     <Field>
-                      <FieldLabel htmlFor="confirm-new-password">Confirm Password</FieldLabel>
+                      <FieldLabel htmlFor="confirm-new-password" className="text-white">Confirm Password</FieldLabel>
                       <PasswordInput
                         id="confirm-new-password"
                         name="confirm-password"
@@ -473,6 +467,7 @@ export default function SettingsPage() {
                     <Button
                       type="submit"
                       disabled={passwordLoading || !passwordsMatch || getStrength(newPassword) < 3}
+                      className="bg-blue-500 hover:bg-blue-600 text-white"
                     >
                       {passwordLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                       {hasOAuthOnly ? "Add Password" : "Update Password"}
@@ -485,13 +480,13 @@ export default function SettingsPage() {
 
           {/* Connected Accounts */}
           <motion.div variants={itemVariants}>
-            <Card>
+            <Card className="bg-white/5 backdrop-blur-xl border-white/10">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
+                <CardTitle className="flex items-center gap-2 text-lg text-white">
                   <Shield className="h-5 w-5" />
                   Connected Accounts
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-white/70">
                   Manage your connected login methods
                 </CardDescription>
               </CardHeader>
@@ -503,7 +498,7 @@ export default function SettingsPage() {
                       .map((identity) => (
                       <div
                         key={identity.identity_id}
-                        className="flex items-center justify-between p-3 rounded-lg border bg-card"
+                        className="flex items-center justify-between p-3 rounded-lg border bg-white/5 border-white/10"
                       >
                         <div className="flex items-center gap-3">
                           {identity.provider === "google" && (
@@ -521,7 +516,7 @@ export default function SettingsPage() {
                           )}
                           <div>
                             <p className="font-medium capitalize">{identity.provider}</p>
-                            <p className="text-xs text-muted-foreground">
+                            <p className="text-xs text-white/60">
                               Connected {new Date(identity.created_at).toLocaleDateString()}
                             </p>
                           </div>
@@ -532,6 +527,7 @@ export default function SettingsPage() {
                             size="sm"
                             onClick={() => handleUnlinkProvider(identity.provider)}
                             disabled={unlinkLoading === identity.provider}
+                            className="text-white/70 border-white/10 hover:bg-white/10"
                           >
                             {unlinkLoading === identity.provider ? (
                               <Loader2 className="h-4 w-4 animate-spin" />
@@ -545,12 +541,12 @@ export default function SettingsPage() {
                     ))}
                   </div>
                   {identities.filter((i) => i.provider !== "email").length === 0 && (
-                    <FieldDescription className="text-center text-muted-foreground">
+                    <FieldDescription className="text-center text-white/70">
                       No OAuth providers connected. You can add Google or GitHub login from the login page.
                     </FieldDescription>
                   )}
                   {identities.filter((i) => i.provider !== "email").length === 1 && !hasPasswordAuth && (
-                    <FieldDescription className="text-center">
+                    <FieldDescription className="text-center text-white/70">
                       Add a password in the section above to enable disconnecting this account.
                     </FieldDescription>
                   )}
@@ -561,23 +557,23 @@ export default function SettingsPage() {
 
           {/* Delete Account */}
           <motion.div variants={itemVariants}>
-            <Card className="border-red-200 dark:border-red-900/50">
+            <Card className="bg-white/5 backdrop-blur-xl border-red-500/20">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg text-red-600 dark:text-red-400">
+                <CardTitle className="flex items-center gap-2 text-lg text-red-400">
                   <Trash2 className="h-5 w-5" />
                   Delete Account
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-white/70">
                   Permanently delete your account and all associated data
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleDeleteAccount}>
                   <FieldGroup>
-                    <div className="rounded-lg bg-red-50 p-4 dark:bg-red-900/20">
+                    <div className="rounded-lg bg-red-500/10 p-4">
                       <div className="flex items-start gap-3">
-                        <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
-                        <div className="text-sm text-red-600 dark:text-red-400">
+                        <AlertTriangle className="h-5 w-5 text-red-400 shrink-0 mt-0.5" />
+                        <div className="text-sm text-red-400">
                           <p className="font-medium mb-1">Warning: This action cannot be undone</p>
                           <p>
                             This will permanently delete your account, all your chats, and remove
@@ -587,7 +583,7 @@ export default function SettingsPage() {
                       </div>
                     </div>
                     <Field>
-                      <FieldLabel htmlFor="delete-confirm">
+                      <FieldLabel htmlFor="delete-confirm" className="text-white">
                         Type <span className="font-mono font-bold">DELETE</span> to confirm
                       </FieldLabel>
                       <Input
@@ -614,6 +610,6 @@ export default function SettingsPage() {
           </motion.div>
         </motion.div>
       </div>
-    </div>
+    </main>
   );
 }

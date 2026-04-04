@@ -93,7 +93,7 @@ export default function SharedChatPage({
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <main id="main-content" className="min-h-screen bg-background">
         {/* Header */}
         <header className="sticky top-0 z-10 border-b bg-background/80 backdrop-blur">
           <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
@@ -125,7 +125,7 @@ export default function SharedChatPage({
                 className={`flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full ${
                   message.role === "user"
                     ? "bg-primary text-primary-foreground"
-                    : "bg-gradient-to-br from-purple-500 to-blue-500 text-white"
+                    : "bg-linear-to-br from-purple-500 to-blue-500 text-white"
                 }`}
               >
                 {message.role === "user" ? (
@@ -147,7 +147,7 @@ export default function SharedChatPage({
                       : "bg-card text-card-foreground shadow-sm border"
                   }`}
                 >
-                  <div className="whitespace-pre-wrap break-words">
+                  <div className="whitespace-pre-wrap wrap-break-word">
                     {message.content}
                   </div>
                 </div>
@@ -166,6 +166,6 @@ export default function SharedChatPage({
             to start chatting.
           </p>
         </footer>
-    </div>
+    </main>
   );
 }

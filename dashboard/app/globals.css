@@ -281,3 +281,40 @@ body {
 .animate-pulse-slow {
   animation: pulse-slow 4s ease-in-out infinite;
 }
+
+/* Hide scrollbar but keep scrolling */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Animated cars driving across road */
+@keyframes drive {
+  0% {
+    left: -30px;
+  }
+  100% {
+    left: calc(100% + 30px);
+  }
+}
+
+.animate-drive {
+  animation: drive linear infinite;
+}
+
+/* Lane markings scrolling effect */
+@keyframes lane-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-36px);
+  }
+}
+
+.animate-lane-scroll {
+  animation: lane-scroll 1.5s linear infinite;
+}

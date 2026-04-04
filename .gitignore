@@ -224,3 +224,10 @@ Keys.json
 *.pkl
 *.pth
 *.joblib
+
+# IDE / editor local config
+.claude/
+.cursor/
+.windsurf/
+.aider*
+.copilot/

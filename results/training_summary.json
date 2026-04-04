@@ -1,15 +1,15 @@
 {
-  "split_strategy": "time",
-  "train_rows": 55776,
-  "test_rows": 13944,
+  "split_strategy": "sequence",
+  "train_rows": 44600,
+  "test_rows": 10521,
   "dropped_target_rows": 0,
-  "baseline_rmse": 352.1334011435044,
-  "baseline_mae": 310.2924122109288,
-  "champion_rmse": 68.98842011684695,
-  "champion_mae": 39.528401612882405,
-  "champion_r2": 0.9595977602814381,
-  "model_artifact": "models\\champion_model.joblib",
-  "metrics_file": "results\\model_metrics.csv",
-  "actual_vs_predicted_plot": "results\\actual_vs_predicted.svg",
-  "residual_plot": "results\\residual_plot.svg"
+  "baseline_weekly_naive_rmse": 110.56954801624029,
+  "baseline_weekly_naive_mae": 61.943000242900446,
+  "baseline_weekly_naive_r2": 0.8946143848715595,
+  "baseline_weekly_naive_weighted_mse": 168.4023543458403,
+  "lstm_rmse": 104.68406516040494,
+  "lstm_mae": 68.94930388211087,
+  "lstm_r2": 0.9055348922165798,
+  "lstm_weighted_mse": 146.11610876536918,
+  "metrics_file": "results\\model_metrics.csv"
 }

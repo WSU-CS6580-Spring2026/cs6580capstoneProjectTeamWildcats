@@ -294,15 +294,15 @@ function PredictionHeroComponent({ snowEnabled, onToggleSnow }: { snowEnabled?: 
                 {condMeta.emoji} {Math.round(temp_f!)}°F {condMeta.label}
               </span>
             )}
-            <span className="text-white/30">|</span>
+            <span className="text-white/50">|</span>
             <span className={cn("text-sm font-semibold flex items-center gap-1", TRAFFIC_META[trafficLevel].color)}>
               <Car className="h-3.5 w-3.5" />
               {Math.round(prediction ?? 0)} veh/hr — {TRAFFIC_META[trafficLevel].label}
             </span>
             {confidence && (
               <>
-                <span className="text-white/30">|</span>
-                <span className="text-xs text-white/50 capitalize">{isLstm ? "🧠 LSTM" : "🌲 RF"} • {confidence}</span>
+                <span className="text-white/50">|</span>
+                <span className="text-xs text-white/50 capitalize">{isLstm ? "📊 Deep" : "⚡ Quick"} • {confidence}</span>
               </>
             )}
           </div>
@@ -381,7 +381,7 @@ function PredictionHeroComponent({ snowEnabled, onToggleSnow }: { snowEnabled?: 
                     <Gauge className="h-10 w-10 text-white/60" strokeWidth={1.5} />
                     <div>
                       <p className="text-sm text-white/70">Weather data unavailable</p>
-                      <p className="text-xs text-white/40">No sensor data for this period</p>
+                      <p className="text-xs text-white/60">No sensor data for this period</p>
                     </div>
                   </div>
                 )}
@@ -410,7 +410,7 @@ function PredictionHeroComponent({ snowEnabled, onToggleSnow }: { snowEnabled?: 
                 <div className="flex flex-col items-start gap-1 min-w-35">
                   {hasForecast ? (
                     <div className="w-full text-white">
-                      <p className="text-[9px] uppercase tracking-widest text-white/40 font-semibold mb-1">72-Hour Forecast</p>
+                      <p className="text-[9px] uppercase tracking-widest text-white/60 font-semibold mb-1">72-Hour Forecast</p>
                       <ForecastSparkline data={forecast_72h!} />
                     </div>
                   ) : (
@@ -422,12 +422,12 @@ function PredictionHeroComponent({ snowEnabled, onToggleSnow }: { snowEnabled?: 
                         </span>
                       </div>
                       {confidence && (
-                        <span className="text-[10px] text-white/40 capitalize">Confidence: {confidence}</span>
+                        <span className="text-[10px] text-white/60 capitalize">Confidence: {confidence}</span>
                       )}
                     </>
                   )}
-                  <span className="text-[10px] text-white/30 mt-0.5">
-                    {isLstm ? "🧠 LSTM" : "🌲 Random Forest"}
+                  <span className="text-[10px] text-white/50 mt-0.5">
+                    {isLstm ? "📊 Deep Analysis" : "⚡ Quick Forecast"}
                   </span>
                 </div>
               </motion.div>

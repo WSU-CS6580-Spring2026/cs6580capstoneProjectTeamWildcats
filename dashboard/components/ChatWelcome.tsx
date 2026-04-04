@@ -21,7 +21,7 @@ const QUICK_PROMPTS = [
   { icon: "⚠️", label: "Road closures", message: "Are there any road closures or traction laws on SR-39 or SR-167 right now?" },
 ];
 
-function ModelStatusBadge({ modelKey }: { modelKey: "random_forest" | "lstm" }) {
+function ModelStatusBadge({ modelKey }: { modelKey: "lstm" }) {
   const { status, models } = useSpaceStatus();
 
   if (status === "unknown") {
@@ -83,71 +83,21 @@ export function ChatWelcome({ selectedModel, onModelChange, isGuest, onSend }: C
         )}
       </div>
 
-      {/* Model Selector Cards */}
-      <div className="grid grid-cols-2 gap-3">
-        <button
-          type="button"
-          onClick={() => onModelChange("random-forest")}
-          className={cn(
-            "group rounded-xl border p-4 text-left transition-all duration-200",
-            selectedModel === "random-forest"
-              ? "border-blue-500 bg-blue-50 dark:bg-blue-950/30 shadow-sm"
-              : "border-border hover:border-blue-300 hover:bg-muted/50"
-          )}
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <div className={cn(
-              "flex h-8 w-8 items-center justify-center rounded-lg text-base transition-colors",
-              selectedModel === "random-forest"
-                ? "bg-blue-500 text-white"
-                : "bg-muted text-muted-foreground group-hover:bg-blue-100 group-hover:text-blue-600"
-            )}>
-              🌲
-            </div>
-            <div>
-              <p className="text-xs font-semibold">Random Forest</p>
-              {selectedModel === "random-forest" && (
-                <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">Active</span>
-              )}
-            </div>
+      {/* Model Info */}
+      <div className="rounded-xl border border-green-500/30 bg-green-50 dark:bg-green-950/30 p-4">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg text-base bg-green-500 text-white">
+            📊
           </div>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            Fast single-point predictions using real weather, traffic lags, and time features from historical data.
-          </p>
-          <ModelStatusBadge modelKey="random_forest" />
-        </button>
-
-        <button
-          type="button"
-          onClick={() => onModelChange("lstm")}
-          className={cn(
-            "group rounded-xl border p-4 text-left transition-all duration-200",
-            selectedModel === "lstm"
-              ? "border-green-500 bg-green-50 dark:bg-green-950/30 shadow-sm"
-              : "border-border hover:border-green-300 hover:bg-muted/50"
-          )}
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <div className={cn(
-              "flex h-8 w-8 items-center justify-center rounded-lg text-base transition-colors",
-              selectedModel === "lstm"
-                ? "bg-green-500 text-white"
-                : "bg-muted text-muted-foreground group-hover:bg-green-100 group-hover:text-green-600"
-            )}>
-              🧠
-            </div>
-            <div>
-              <p className="text-xs font-semibold">LSTM</p>
-              {selectedModel === "lstm" && (
-                <span className="text-xs text-green-600 dark:text-green-400 font-medium">Active</span>
-              )}
-            </div>
+          <div>
+            <p className="text-xs font-semibold">LSTM Neural Network</p>
+            <span className="text-xs text-green-600 dark:text-green-400 font-medium">Active</span>
           </div>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            Uses real 48-hour traffic sequences to predict the next 72 hours of traffic patterns.
-          </p>
-          <ModelStatusBadge modelKey="lstm" />
-        </button>
+        </div>
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          Uses real 48-hour traffic sequences to predict the next 72 hours of traffic patterns.
+        </p>
+        <ModelStatusBadge modelKey="lstm" />
       </div>
 
       {/* Capability Cards */}
@@ -231,7 +181,7 @@ export function ChatWelcome({ selectedModel, onModelChange, isGuest, onSend }: C
           <div className="space-y-1">
             <p className="text-xs font-semibold">How It Works</p>
             <p className="text-xs text-muted-foreground">
-              Just tell me a <span className="font-medium text-foreground">day and time</span> — the {selectedModel === "random-forest" ? "🌲 Random Forest" : "🧠 LSTM"} model will use real historical weather and traffic data from Trappers Loop sensors automatically.
+              Just tell me a <span className="font-medium text-foreground">day and time</span> — the 📊 LSTM model will use real historical weather and traffic data from Trappers Loop sensors automatically.
             </p>
             <p className="text-xs text-muted-foreground italic mt-1">
               "How busy is traffic to Snowbasin this Saturday at 9am?"

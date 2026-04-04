@@ -17,7 +17,7 @@ const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
         <input
           type={showPassword ? "text" : "password"}
           className={cn(
-            "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 pr-10 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+            "flex h-10 w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 pr-10 text-sm text-white placeholder:text-white/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/20 focus-visible:border-blue-400/50 disabled:cursor-not-allowed disabled:opacity-50",
             className
           )}
           ref={ref}
@@ -32,9 +32,9 @@ const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
           tabIndex={-1}
         >
           {showPassword ? (
-            <EyeOff className="h-4 w-4 text-muted-foreground" />
+            <EyeOff className="h-4 w-4 text-white/40" />
           ) : (
-            <Eye className="h-4 w-4 text-muted-foreground" />
+            <Eye className="h-4 w-4 text-white/40" />
           )}
           <span className="sr-only">
             {showPassword ? "Hide password" : "Show password"}

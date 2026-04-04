@@ -7,12 +7,11 @@ const HF_FASTAPI_URL =
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { model: _model, ...params } = body;
 
     const response = await fetch(`${HF_FASTAPI_URL}/predict`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(params),
+      body: JSON.stringify(body),
     });
 
     if (!response.ok) {
@@ -29,6 +28,7 @@ export async function POST(request: NextRequest) {
       prediction: data.prediction,
       model: data.model,
       confidence: data.confidence,
+      details: data.details ?? {},
       timestamp: new Date().toISOString(),
     });
   } catch (error) {

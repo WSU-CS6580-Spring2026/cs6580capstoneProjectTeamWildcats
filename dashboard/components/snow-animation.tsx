@@ -154,7 +154,7 @@ function SnowAnimationComponent() {
   return createPortal(
     <div
       className="pointer-events-none fixed inset-0 overflow-hidden"
-      style={{ zIndex: 9999 }}
+      style={{ zIndex: 1 }}
       aria-hidden="true"
     >
       {snowflakes.map((flake) => (
