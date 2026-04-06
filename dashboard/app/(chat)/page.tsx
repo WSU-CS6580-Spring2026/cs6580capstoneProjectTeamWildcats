@@ -841,7 +841,7 @@ function ChatPageInner() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 rounded-full bg-white/5 px-2.5 py-1">
                       <span className="text-xs">{isLstm ? "📊" : "⚡"}</span>
-                      <span className="text-[11px] text-white/70 font-medium">{isLstm ? "📊 Deep Analysis" : "⚡ Quick Forecast"}</span>
+                      <span className="text-[11px] text-white/70 font-medium">{isLstm ? "Deep Analysis" : "Quick Forecast"}</span>
                     </div>
                     <div className="flex items-center gap-1.5 rounded-full bg-white/5 px-2.5 py-1">
                       <TrendIcon className={cn("h-3.5 w-3.5", trend === "up" ? "text-red-400" : trend === "down" ? "text-green-400" : "text-white/60")} />

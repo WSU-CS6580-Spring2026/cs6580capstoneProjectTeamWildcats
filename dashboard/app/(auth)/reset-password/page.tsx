@@ -24,8 +24,6 @@ import { PasswordInput } from "@/components/ui/password-input";
 import { PasswordStrength, getStrength } from "@/components/ui/password-strength";
 import { Loader2, Snowflake, KeyRound, CheckCircle } from "lucide-react";
 import { SnowAnimation } from "@/components/snow-animation";
-import { SnowToggle } from "@/components/snow-toggle";
-import { useSnow } from "@/hooks/use-snow";
 import { toast } from "sonner";
 
 const containerVariants: Variants = {
@@ -54,7 +52,6 @@ const itemVariants: Variants = {
 
 export default function ResetPasswordPage() {
   const router = useRouter();
-  const { snowEnabled, toggleSnow } = useSnow();
   const supabase = createClient();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -125,11 +122,8 @@ export default function ResetPasswordPage() {
 
   return (
     <div className="relative bg-muted flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
-      {snowEnabled && <SnowAnimation />}
+      <SnowAnimation />
 
-      <div className="absolute top-4 right-4 z-20">
-        <SnowToggle enabled={snowEnabled} onToggle={toggleSnow} />
-      </div>
 
       <div className="flex w-full max-w-sm flex-col gap-6">
         <motion.a

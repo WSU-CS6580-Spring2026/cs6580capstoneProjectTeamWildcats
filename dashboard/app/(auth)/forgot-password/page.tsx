@@ -21,8 +21,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Loader2, Snowflake, ArrowLeft, Mail, CheckCircle } from "lucide-react";
 import { SnowAnimation } from "@/components/snow-animation";
-import { SnowToggle } from "@/components/snow-toggle";
-import { useSnow } from "@/hooks/use-snow";
 import { toast } from "sonner";
 
 const containerVariants: Variants = {
@@ -50,7 +48,6 @@ const itemVariants: Variants = {
 };
 
 export default function ForgotPasswordPage() {
-  const { snowEnabled, toggleSnow } = useSnow();
   const supabase = createClient();
   const [email, setEmail] = useState("");
   const [success, setSuccess] = useState(false);
@@ -79,11 +76,8 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="relative bg-muted flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
-      {snowEnabled && <SnowAnimation />}
+      <SnowAnimation />
 
-      <div className="absolute top-4 right-4 z-20">
-        <SnowToggle enabled={snowEnabled} onToggle={toggleSnow} />
-      </div>
 
       <div className="flex w-full max-w-sm flex-col gap-6">
         <motion.a
