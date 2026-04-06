@@ -1,5 +1,7 @@
 <a name="readme-top"></a>
 
+https://dashboard-snowbasin-wildcats.vercel.app/
+
 # The Snowbasin "Congestion Engine"
 
 ## The Wildcats
@@ -13,34 +15,6 @@
 
 Predict peak-hour traffic volume on Trappers Loop (SR-167) to optimize mountain resort staffing and parking operations 72 hours in advance.
 
-## Sprint 3 modeling workflow
-
-Run the full modeling and evaluation pipeline after generating processed data:
-
-```bash
-python src/data_cleaning.py
-python src/train_model.py
-```
-
-Artifacts produced by `src/train_model.py`:
-
-- `models/champion_model.joblib`
-- `results/model_metrics.csv` (baseline vs. champion metrics)
-- `results/training_summary.json`
-- `results/actual_vs_predicted.svg`
-- `results/residual_plot.svg`
-
-## How to Run the App
-
-Launch the Sprint 4 MVP dashboard locally with Gradio:
-
-```bash
-python src/train_model.py
-python src/app.py
-```
-
-Open the URL displayed by Gradio (typically `http://localhost:7860`) and use the controls to generate real-time traffic predictions from the saved champion model.
-
 ### Data audit artifact
 
 A full inventory of every CSV and Excel source currently in the repository is documented at:
@@ -50,6 +24,7 @@ A full inventory of every CSV and Excel source currently in the repository is do
 ## Links
 
 - Dashboard: https://dashboard-snowbasin-wildcats.vercel.app/
+- Models profile: https://huggingface.co/hazemdhW26
 - Data export endpoint: https://d34agsj343lfgw.cloudfront.net/
 
 <!--

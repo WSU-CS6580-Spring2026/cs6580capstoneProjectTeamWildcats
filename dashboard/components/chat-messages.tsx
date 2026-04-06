@@ -3,7 +3,7 @@
 import { Fragment, useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Copy, Check, Pencil, RefreshCw, Volume2, VolumeX, Snowflake, Clock, FileText, ChevronDown, ChevronUp } from "lucide-react";
+import { Copy, Check, Pencil, RefreshCw, Volume2, VolumeX, Snowflake, FileText, ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MapDisplay, parsePlacesFromContent, cleanMapDataFromContent } from "./map-display";
 import { PredictionCards } from "./prediction-cards";

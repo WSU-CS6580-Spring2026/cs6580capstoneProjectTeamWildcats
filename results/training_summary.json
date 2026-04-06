@@ -5,11 +5,11 @@
   "dropped_target_rows": 0,
   "baseline_weekly_naive_rmse": 110.56954801624029,
   "baseline_weekly_naive_mae": 61.943000242900446,
-  "baseline_weekly_naive_r2": 0.8946143848715595,
-  "baseline_weekly_naive_weighted_mse": 168.4023543458403,
-  "lstm_rmse": 104.68406516040494,
-  "lstm_mae": 68.94930388211087,
-  "lstm_r2": 0.9055348922165798,
-  "lstm_weighted_mse": 146.11610876536918,
+  "baseline_weekly_naive_r2": 0.8946143848715596,
+  "baseline_weekly_naive_weighted_mse": 168.40235434584034,
+  "lstm_rmse": 106.57768987722693,
+  "lstm_mae": 71.40272130053302,
+  "lstm_r2": 0.902086433245663,
+  "lstm_weighted_mse": 155.0428466766855,
   "metrics_file": "results\\model_metrics.csv"
 }

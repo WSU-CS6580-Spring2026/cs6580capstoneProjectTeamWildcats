@@ -1,6 +1,6 @@
 "use client";
 
-import { Mountain, AlertTriangle, Thermometer, Brain, TreePine, Loader2 } from "lucide-react";
+import { Mountain, AlertTriangle, Thermometer, TreePine, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ModelType } from "@/components/chat-input";
 import { useSpaceStatus } from "@/hooks/use-space-status";

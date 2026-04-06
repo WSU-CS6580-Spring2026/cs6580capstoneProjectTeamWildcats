@@ -3,7 +3,6 @@
 import { useState, useMemo, useEffect, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Thermometer,
   Droplets,
   Wind,
   Snowflake,
@@ -160,7 +159,6 @@ function TrafficGauge({ value, level }: { value: number; level: TrafficLevel }) 
   // SVG arc
   const r = 52;
   const cx = 60, cy = 58;
-  const startX = cx - r, startY = cy;
   const endAngleRad = (Math.PI * (180 - angle)) / 180;
   const endX = cx + r * Math.cos(endAngleRad - Math.PI);
   const endY = cy - r * Math.sin(endAngleRad - Math.PI) * -1; // flip for SVG

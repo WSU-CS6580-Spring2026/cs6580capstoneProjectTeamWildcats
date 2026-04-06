@@ -266,7 +266,6 @@ interface CarData { id: number; lane: number; speed: number; delay: number; colo
 const CAR_COLORS = ["#60a5fa", "#f87171", "#fbbf24", "#34d399", "#a78bfa", "#fb923c", "#e879f9", "#38bdf8"];
 
 function TrafficRoad({ count, level }: { count: number; level: TrafficLevel }) {
-  const meta = TRAFFIC_META[level];
   const [cars, setCars] = useState<CarData[]>([]);
   useEffect(() => {
     const numCars = count <= 0 ? 1 : count < 80 ? 3 : count < 180 ? 6 : count < 300 ? 9 : 14;

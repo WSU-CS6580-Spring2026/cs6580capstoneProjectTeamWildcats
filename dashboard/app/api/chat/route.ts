@@ -89,7 +89,6 @@ function extractPredictionParams(
           const todayIndex = DAY_NAMES.indexOf(utahWeekday);
           const tomorrowIndex = (todayIndex + 1) % 7;
           day_of_week = DAY_NAMES[tomorrowIndex].charAt(0).toUpperCase() + DAY_NAMES[tomorrowIndex].slice(1);
-          foundDay = true;
           break;
         }
         for (const day of DAY_NAMES) {

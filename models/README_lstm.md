@@ -1,6 +1,7 @@
 ---
 tags:
 - traffic-prediction
+- sklearn
 - pytorch
 - time-series
 library_name: pytorch
@@ -12,12 +13,12 @@ library_name: pytorch
 This model predicts traffic counts for Snowbasin ski resort based on time, weather, and historical traffic data.
 
 ## Model Type
-LSTM Neural Network
+LSTM
 
 ## Performance Metrics
-- RMSE: 104.68406516040494
-- MAE: 68.94930388211087
-- R2: 0.9055348922165798
+- RMSE: 106.57768987722693
+- MAE: 71.40272130053302
+- R2: 0.902086433245663
 
 ## Features
 The model uses the following features:
@@ -28,6 +29,20 @@ The model uses the following features:
 
 ## Usage
 
+### Random Forest Model
+```python
+import joblib
+from huggingface_hub import hf_hub_download
+
+# Download model
+model_path = hf_hub_download(repo_id="YOUR_USERNAME/snowbasin-traffic-lstm", filename="champion_model.joblib")
+model = joblib.load(model_path)
+
+# Make predictions
+predictions = model.predict(X)
+```
+
+### LSTM Model
 ```python
 import torch
 from huggingface_hub import hf_hub_download
@@ -36,7 +51,7 @@ from huggingface_hub import hf_hub_download
 model_path = hf_hub_download(repo_id="YOUR_USERNAME/snowbasin-traffic-lstm", filename="champion_lstm.pth")
 
 # Load model architecture (you'll need the TrafficLSTM class)
-model = TrafficLSTM(input_size=34)  # Adjust input_size based on your features
+model = TrafficLSTM(input_size=33)  # Adjust input_size based on your features
 model.load_state_dict(torch.load(model_path))
 model.eval()
 ```
