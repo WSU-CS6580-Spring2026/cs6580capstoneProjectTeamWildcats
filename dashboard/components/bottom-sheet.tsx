@@ -116,10 +116,10 @@ export function BottomSheet({ children, inputArea, chats, currentChatId, onSelec
             exit={{ scale: 0, opacity: 0 }}
             transition={{ type: "spring", stiffness: 400, damping: 25 }}
             onClick={handleOpen}
-            className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-blue-500 hover:bg-blue-600 shadow-lg shadow-blue-500/25 flex items-center justify-center hover:scale-105 active:scale-95"
+            className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-white hover:bg-white/90 shadow-xl shadow-black/30 ring-2 ring-white/20 flex items-center justify-center hover:scale-105 active:scale-95"
             aria-label="Open chat"
           >
-            <MessageSquare className="h-6 w-6 text-white" />
+            <MessageSquare className="h-6 w-6 text-blue-600" />
           </motion.button>
         )}
       </AnimatePresence>
