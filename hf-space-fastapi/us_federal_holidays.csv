@@ -1,0 +1,127 @@
+year,holiday_name,actual_date,actual_day_of_week,observed_date,observed_day_of_week,observed_shifted
+2015,New Year's Day,2015-01-01,Thursday,2015-01-01,Thursday,False
+2015,"Birthday of Martin Luther King, Jr.",2015-01-19,Monday,2015-01-19,Monday,False
+2015,Washington’s Birthday,2015-02-16,Monday,2015-02-16,Monday,False
+2015,Memorial Day,2015-05-25,Monday,2015-05-25,Monday,False
+2015,Independence Day,2015-07-04,Saturday,2015-07-03,Friday,True
+2015,Labor Day,2015-09-07,Monday,2015-09-07,Monday,False
+2015,Columbus Day,2015-10-12,Monday,2015-10-12,Monday,False
+2015,Veterans Day,2015-11-11,Wednesday,2015-11-11,Wednesday,False
+2015,Thanksgiving Day,2015-11-26,Thursday,2015-11-26,Thursday,False
+2015,Christmas Day,2015-12-25,Friday,2015-12-25,Friday,False
+2016,New Year's Day,2016-01-01,Friday,2016-01-01,Friday,False
+2016,"Birthday of Martin Luther King, Jr.",2016-01-18,Monday,2016-01-18,Monday,False
+2016,Washington’s Birthday,2016-02-15,Monday,2016-02-15,Monday,False
+2016,Memorial Day,2016-05-30,Monday,2016-05-30,Monday,False
+2016,Independence Day,2016-07-04,Monday,2016-07-04,Monday,False
+2016,Labor Day,2016-09-05,Monday,2016-09-05,Monday,False
+2016,Columbus Day,2016-10-10,Monday,2016-10-10,Monday,False
+2016,Veterans Day,2016-11-11,Friday,2016-11-11,Friday,False
+2016,Thanksgiving Day,2016-11-24,Thursday,2016-11-24,Thursday,False
+2016,Christmas Day,2016-12-25,Sunday,2016-12-26,Monday,True
+2017,New Year's Day,2017-01-01,Sunday,2017-01-02,Monday,True
+2017,"Birthday of Martin Luther King, Jr.",2017-01-16,Monday,2017-01-16,Monday,False
+2017,Washington’s Birthday,2017-02-20,Monday,2017-02-20,Monday,False
+2017,Memorial Day,2017-05-29,Monday,2017-05-29,Monday,False
+2017,Independence Day,2017-07-04,Tuesday,2017-07-04,Tuesday,False
+2017,Labor Day,2017-09-04,Monday,2017-09-04,Monday,False
+2017,Columbus Day,2017-10-09,Monday,2017-10-09,Monday,False
+2017,Veterans Day,2017-11-11,Saturday,2017-11-10,Friday,True
+2017,Thanksgiving Day,2017-11-23,Thursday,2017-11-23,Thursday,False
+2017,Christmas Day,2017-12-25,Monday,2017-12-25,Monday,False
+2018,New Year's Day,2018-01-01,Monday,2018-01-01,Monday,False
+2018,"Birthday of Martin Luther King, Jr.",2018-01-15,Monday,2018-01-15,Monday,False
+2018,Washington’s Birthday,2018-02-19,Monday,2018-02-19,Monday,False
+2018,Memorial Day,2018-05-28,Monday,2018-05-28,Monday,False
+2018,Independence Day,2018-07-04,Wednesday,2018-07-04,Wednesday,False
+2018,Labor Day,2018-09-03,Monday,2018-09-03,Monday,False
+2018,Columbus Day,2018-10-08,Monday,2018-10-08,Monday,False
+2018,Veterans Day,2018-11-11,Sunday,2018-11-12,Monday,True
+2018,Thanksgiving Day,2018-11-22,Thursday,2018-11-22,Thursday,False
+2018,Christmas Day,2018-12-25,Tuesday,2018-12-25,Tuesday,False
+2019,New Year's Day,2019-01-01,Tuesday,2019-01-01,Tuesday,False
+2019,"Birthday of Martin Luther King, Jr.",2019-01-21,Monday,2019-01-21,Monday,False
+2019,Washington’s Birthday,2019-02-18,Monday,2019-02-18,Monday,False
+2019,Memorial Day,2019-05-27,Monday,2019-05-27,Monday,False
+2019,Independence Day,2019-07-04,Thursday,2019-07-04,Thursday,False
+2019,Labor Day,2019-09-02,Monday,2019-09-02,Monday,False
+2019,Columbus Day,2019-10-14,Monday,2019-10-14,Monday,False
+2019,Veterans Day,2019-11-11,Monday,2019-11-11,Monday,False
+2019,Thanksgiving Day,2019-11-28,Thursday,2019-11-28,Thursday,False
+2019,Christmas Day,2019-12-25,Wednesday,2019-12-25,Wednesday,False
+2020,New Year's Day,2020-01-01,Wednesday,2020-01-01,Wednesday,False
+2020,"Birthday of Martin Luther King, Jr.",2020-01-20,Monday,2020-01-20,Monday,False
+2020,Washington’s Birthday,2020-02-17,Monday,2020-02-17,Monday,False
+2020,Memorial Day,2020-05-25,Monday,2020-05-25,Monday,False
+2020,Independence Day,2020-07-04,Saturday,2020-07-03,Friday,True
+2020,Labor Day,2020-09-07,Monday,2020-09-07,Monday,False
+2020,Columbus Day,2020-10-12,Monday,2020-10-12,Monday,False
+2020,Veterans Day,2020-11-11,Wednesday,2020-11-11,Wednesday,False
+2020,Thanksgiving Day,2020-11-26,Thursday,2020-11-26,Thursday,False
+2020,Christmas Day,2020-12-25,Friday,2020-12-25,Friday,False
+2021,New Year's Day,2021-01-01,Friday,2021-01-01,Friday,False
+2021,"Birthday of Martin Luther King, Jr.",2021-01-18,Monday,2021-01-18,Monday,False
+2021,Washington’s Birthday,2021-02-15,Monday,2021-02-15,Monday,False
+2021,Memorial Day,2021-05-31,Monday,2021-05-31,Monday,False
+2021,Juneteenth National Independence Day,2021-06-19,Saturday,2021-06-18,Friday,True
+2021,Independence Day,2021-07-04,Sunday,2021-07-05,Monday,True
+2021,Labor Day,2021-09-06,Monday,2021-09-06,Monday,False
+2021,Columbus Day,2021-10-11,Monday,2021-10-11,Monday,False
+2021,Veterans Day,2021-11-11,Thursday,2021-11-11,Thursday,False
+2021,Thanksgiving Day,2021-11-25,Thursday,2021-11-25,Thursday,False
+2021,Christmas Day,2021-12-25,Saturday,2021-12-24,Friday,True
+2022,New Year's Day,2022-01-01,Saturday,2021-12-31,Friday,True
+2022,"Birthday of Martin Luther King, Jr.",2022-01-17,Monday,2022-01-17,Monday,False
+2022,Washington’s Birthday,2022-02-21,Monday,2022-02-21,Monday,False
+2022,Memorial Day,2022-05-30,Monday,2022-05-30,Monday,False
+2022,Juneteenth National Independence Day,2022-06-19,Sunday,2022-06-20,Monday,True
+2022,Independence Day,2022-07-04,Monday,2022-07-04,Monday,False
+2022,Labor Day,2022-09-05,Monday,2022-09-05,Monday,False
+2022,Columbus Day,2022-10-10,Monday,2022-10-10,Monday,False
+2022,Veterans Day,2022-11-11,Friday,2022-11-11,Friday,False
+2022,Thanksgiving Day,2022-11-24,Thursday,2022-11-24,Thursday,False
+2022,Christmas Day,2022-12-25,Sunday,2022-12-26,Monday,True
+2023,New Year's Day,2023-01-01,Sunday,2023-01-02,Monday,True
+2023,"Birthday of Martin Luther King, Jr.",2023-01-16,Monday,2023-01-16,Monday,False
+2023,Washington’s Birthday,2023-02-20,Monday,2023-02-20,Monday,False
+2023,Memorial Day,2023-05-29,Monday,2023-05-29,Monday,False
+2023,Juneteenth National Independence Day,2023-06-19,Monday,2023-06-19,Monday,False
+2023,Independence Day,2023-07-04,Tuesday,2023-07-04,Tuesday,False
+2023,Labor Day,2023-09-04,Monday,2023-09-04,Monday,False
+2023,Columbus Day,2023-10-09,Monday,2023-10-09,Monday,False
+2023,Veterans Day,2023-11-11,Saturday,2023-11-10,Friday,True
+2023,Thanksgiving Day,2023-11-23,Thursday,2023-11-23,Thursday,False
+2023,Christmas Day,2023-12-25,Monday,2023-12-25,Monday,False
+2024,New Year's Day,2024-01-01,Monday,2024-01-01,Monday,False
+2024,"Birthday of Martin Luther King, Jr.",2024-01-15,Monday,2024-01-15,Monday,False
+2024,Washington’s Birthday,2024-02-19,Monday,2024-02-19,Monday,False
+2024,Memorial Day,2024-05-27,Monday,2024-05-27,Monday,False
+2024,Juneteenth National Independence Day,2024-06-19,Wednesday,2024-06-19,Wednesday,False
+2024,Independence Day,2024-07-04,Thursday,2024-07-04,Thursday,False
+2024,Labor Day,2024-09-02,Monday,2024-09-02,Monday,False
+2024,Columbus Day,2024-10-14,Monday,2024-10-14,Monday,False
+2024,Veterans Day,2024-11-11,Monday,2024-11-11,Monday,False
+2024,Thanksgiving Day,2024-11-28,Thursday,2024-11-28,Thursday,False
+2024,Christmas Day,2024-12-25,Wednesday,2024-12-25,Wednesday,False
+2025,New Year's Day,2025-01-01,Wednesday,2025-01-01,Wednesday,False
+2025,"Birthday of Martin Luther King, Jr.",2025-01-20,Monday,2025-01-20,Monday,False
+2025,Washington’s Birthday,2025-02-17,Monday,2025-02-17,Monday,False
+2025,Memorial Day,2025-05-26,Monday,2025-05-26,Monday,False
+2025,Juneteenth National Independence Day,2025-06-19,Thursday,2025-06-19,Thursday,False
+2025,Independence Day,2025-07-04,Friday,2025-07-04,Friday,False
+2025,Labor Day,2025-09-01,Monday,2025-09-01,Monday,False
+2025,Columbus Day,2025-10-13,Monday,2025-10-13,Monday,False
+2025,Veterans Day,2025-11-11,Tuesday,2025-11-11,Tuesday,False
+2025,Thanksgiving Day,2025-11-27,Thursday,2025-11-27,Thursday,False
+2025,Christmas Day,2025-12-25,Thursday,2025-12-25,Thursday,False
+2026,New Year's Day,2026-01-01,Thursday,2026-01-01,Thursday,False
+2026,"Birthday of Martin Luther King, Jr.",2026-01-19,Monday,2026-01-19,Monday,False
+2026,Washington’s Birthday,2026-02-16,Monday,2026-02-16,Monday,False
+2026,Memorial Day,2026-05-25,Monday,2026-05-25,Monday,False
+2026,Juneteenth National Independence Day,2026-06-19,Friday,2026-06-19,Friday,False
+2026,Independence Day,2026-07-04,Saturday,2026-07-03,Friday,True
+2026,Labor Day,2026-09-07,Monday,2026-09-07,Monday,False
+2026,Columbus Day,2026-10-12,Monday,2026-10-12,Monday,False
+2026,Veterans Day,2026-11-11,Wednesday,2026-11-11,Wednesday,False
+2026,Thanksgiving Day,2026-11-26,Thursday,2026-11-26,Thursday,False
+2026,Christmas Day,2026-12-25,Friday,2026-12-25,Friday,False
