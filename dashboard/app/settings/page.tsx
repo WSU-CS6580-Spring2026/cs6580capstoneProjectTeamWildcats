@@ -277,9 +277,9 @@ export default function SettingsPage() {
 
   if (authLoading) {
     return (
-      <div className="flex min-h-svh items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-      </div>
+      <main id="main-content" className="flex min-h-svh items-center justify-center bg-linear-to-br from-slate-950 via-indigo-950 to-slate-900">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-400" />
+      </main>
     );
   }
 

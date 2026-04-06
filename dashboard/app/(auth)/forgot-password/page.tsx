@@ -75,11 +75,13 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="relative bg-muted flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
-      <SnowAnimation />
+    <main id="main-content" className="relative flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10 overflow-hidden">
+      <div className="absolute inset-0 bg-linear-to-br from-slate-950 via-indigo-950 to-slate-900" />
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <SnowAnimation />
+      </div>
 
-
-      <div className="flex w-full max-w-sm flex-col gap-6">
+      <div className="relative z-10 flex w-full max-w-sm flex-col gap-6">
         <motion.a
           href="/"
           className="flex items-center gap-2 self-center font-medium"
@@ -90,9 +92,9 @@ export default function ForgotPasswordPage() {
           <div className="bg-linear-to-br from-blue-400 to-cyan-500 text-white flex size-8 items-center justify-center rounded-lg shadow-lg shadow-blue-500/25">
             <Snowflake className="size-5" />
           </div>
-          <span className="text-lg bg-linear-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent font-semibold">
+          <h1 className="text-lg bg-linear-to-r from-blue-300 to-cyan-300 bg-clip-text text-transparent font-semibold">
             Snowbasin
-          </span>
+          </h1>
         </motion.a>
 
         <motion.div
@@ -198,6 +200,6 @@ export default function ForgotPasswordPage() {
           </motion.div>
         </motion.div>
       </div>
-    </div>
+    </main>
   );
 }

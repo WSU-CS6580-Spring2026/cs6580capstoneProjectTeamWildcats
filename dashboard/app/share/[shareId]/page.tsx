@@ -68,34 +68,34 @@ export default function SharedChatPage({
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-      </div>
+      <main id="main-content" className="flex min-h-screen items-center justify-center bg-linear-to-br from-slate-950 via-indigo-950 to-slate-900">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-400 border-t-transparent" />
+      </main>
     );
   }
 
   if (error || !chat) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
-        <div className="mb-4 rounded-full bg-destructive/10 p-4">
-          <Bot className="h-8 w-8 text-destructive" />
+      <main id="main-content" className="flex min-h-screen flex-col items-center justify-center bg-linear-to-br from-slate-950 via-indigo-950 to-slate-900 px-4">
+        <div className="mb-4 rounded-full bg-red-500/10 p-4">
+          <Bot className="h-8 w-8 text-red-400" />
         </div>
-        <h1 className="mb-2 text-xl font-semibold">{error}</h1>
+        <h1 className="mb-2 text-xl font-semibold text-white">{error}</h1>
         <Link
           href="/"
-          className="mt-4 flex items-center gap-2 text-primary hover:underline"
+          className="mt-4 flex items-center gap-2 text-blue-400 hover:underline"
         >
           <ArrowLeft className="h-4 w-4" />
           Go to home
         </Link>
-      </div>
+      </main>
     );
   }
 
   return (
-    <main id="main-content" className="min-h-screen bg-background">
+    <main id="main-content" className="min-h-screen bg-linear-to-br from-slate-950 via-indigo-950 to-slate-900">
         {/* Header */}
-        <header className="sticky top-0 z-10 border-b bg-background/80 backdrop-blur">
+        <header className="sticky top-0 z-10 border-b border-white/10 bg-slate-950/80 backdrop-blur">
           <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
             <div className="flex items-center gap-3">
               <Link href="/">
