@@ -443,6 +443,7 @@ function ChatPageInner() {
   const [isLoading, setIsLoading] = useState(false);
   const [streamingContent, setStreamingContent] = useState("");
   const selectedModel = "lstm" as const;
+  const [cameraOpen, setCameraOpen] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   useEffect(() => {
@@ -697,7 +698,7 @@ function ChatPageInner() {
               </div>
             </div>
             <div className="flex items-center gap-1.5">
-              <LiveCameraButton />
+              <LiveCameraButton isOpen={cameraOpen} onToggle={setCameraOpen} />
               {/* Settings dropdown */}
               <div className="relative" ref={menuRef}>
                 <button onClick={() => setMenuOpen(!menuOpen)}
@@ -904,6 +905,7 @@ function ChatPageInner() {
 
       {/* Floating chat button + Bottom Sheet */}
       <BottomSheet
+        onOpen={() => setCameraOpen(false)}
         chats={chats}
         currentChatId={currentChatId}
         onSelectChat={handleSelectChat}

@@ -442,6 +442,7 @@ function GuestPageInner() {
   const [streamingContent, setStreamingContent] = useState("");
   const selectedModel = "lstm" as const;
   const abortControllerRef = useRef<AbortController | null>(null);
+  const [cameraOpen, setCameraOpen] = useState(false);
 
   const utahNow = getUtahTimeParams();
   const [selectedDay, setSelectedDay] = useState(utahNow.dayOfWeek);
@@ -606,27 +607,23 @@ function GuestPageInner() {
             transition={{ duration: 0.4, delay: 0.1 }}
             className="flex items-start justify-between"
           >
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 backdrop-blur-sm border border-white/10">
-                <Snowflake className="h-5 w-5 text-blue-300" />
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-white/10 backdrop-blur-sm border border-white/10 shrink-0">
+                <Snowflake className="h-4 w-4 sm:h-5 sm:w-5 text-blue-300" />
               </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h1 className="text-xl sm:text-2xl font-bold text-white">Snowbasin Traffic</h1>
-                  <span className="text-[10px] text-white/60 bg-white/10 px-2 py-0.5 rounded-full">Guest</span>
-                </div>
-                <p className="text-xs text-white/50">
+              <div className="min-w-0">
+                <h1 className="text-base sm:text-2xl font-bold text-white truncate">Snowbasin Traffic</h1>
+                <p className="text-[10px] sm:text-xs text-white/50">
                   {selectedDayLabel} at {hourLabel}
                   {dashLoading && " — updating..."}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-1.5">
-              <LiveCameraButton />
+            <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+              <LiveCameraButton isOpen={cameraOpen} onToggle={setCameraOpen} />
               <Link href="/login" aria-label="Sign In">
-                <Button variant="ghost" size="sm" className="gap-1.5 text-white/70 hover:text-white hover:bg-white/10 h-8 px-3" aria-label="Sign In">
+                <Button variant="ghost" size="sm" className="gap-1 text-white/70 hover:text-white hover:bg-white/10 h-8 px-2 sm:px-3" aria-label="Sign In">
                   <LogIn className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline text-xs">Sign In</span>
                 </Button>
               </Link>
             </div>
@@ -803,6 +800,7 @@ function GuestPageInner() {
 
       {/* Bottom Sheet Chat */}
       <BottomSheet
+        onOpen={() => setCameraOpen(false)}
         inputArea={
           <ChatInput onSend={handleSendMessage} onStop={handleStop} isLoading={isLoading}
             selectedModel="lstm" onModelChange={() => {}} />

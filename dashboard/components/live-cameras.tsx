@@ -6,17 +6,20 @@ import { Camera, X, ChevronLeft, ChevronRight, RefreshCw, Maximize2, Minimize2, 
 import { cn } from "@/lib/utils";
 import type { TrafficCamera } from "@/lib/udot";
 
-export function LiveCameraButton() {
-  const [open, setOpen] = useState(false);
+export function LiveCameraButton({ isOpen, onToggle }: { isOpen?: boolean; onToggle?: (open: boolean) => void } = {}) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = isOpen ?? internalOpen;
+  const setOpen = (v: boolean) => { setInternalOpen(v); onToggle?.(v); };
 
   return (
     <>
       <button
         onClick={() => setOpen(true)}
-        className="flex items-center gap-2 rounded-full bg-red-500/15 hover:bg-red-500/25 border border-red-500/20 px-3 py-1.5 text-xs font-medium text-red-300 transition-colors"
+        className="flex items-center gap-1.5 sm:gap-2 rounded-full bg-red-500/15 hover:bg-red-500/25 border border-red-500/20 px-2 sm:px-3 py-1.5 text-[11px] sm:text-xs font-medium text-red-300 transition-colors"
       >
         <Camera className="h-3 w-3" />
-        Road Cameras
+        <span className="hidden sm:inline">Road Cameras</span>
+        <span className="sm:hidden">Cameras</span>
       </button>
 
       <AnimatePresence>
@@ -82,32 +85,30 @@ function LiveCameraModal({ onClose }: { onClose: () => void }) {
         transition={{ type: "spring", stiffness: 300, damping: 25 }}
         className={cn(
           "relative z-10 rounded-2xl bg-slate-900/95 backdrop-blur-xl border border-white/10 shadow-2xl overflow-hidden flex flex-col",
-          expanded ? "w-full h-full max-w-none max-h-none" : "w-full max-w-3xl max-h-[85vh]"
+          expanded ? "w-full h-full max-w-none max-h-none rounded-none" : "w-full max-w-3xl max-h-[90vh] sm:max-h-[85vh]"
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 shrink-0">
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5">
-              <Camera className="h-4 w-4 text-white/70" />
-              <span className="text-sm font-semibold text-white">UDOT Traffic Cameras</span>
-            </div>
-            <span className="text-[10px] text-white/60 bg-white/5 px-2 py-0.5 rounded-full">
-              Snapshots • Refreshes ~60s
+        <div className="flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 border-b border-white/10 shrink-0">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <Camera className="h-4 w-4 text-white/70 shrink-0" />
+            <span className="text-xs sm:text-sm font-semibold text-white truncate">UDOT Traffic Cameras</span>
+            <span className="text-[9px] sm:text-[10px] text-white/60 bg-white/5 px-1.5 sm:px-2 py-0.5 rounded-full whitespace-nowrap hidden sm:inline">
+              Snapshots • ~60s
             </span>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5 shrink-0">
             <button onClick={handleRefresh}
-              className="p-1.5 rounded-full hover:bg-white/10 transition-colors" title="Refresh">
-              <RefreshCw className={cn("h-4 w-4 text-white/50", refreshing && "animate-spin")} />
+              className="p-1.5 rounded-full hover:bg-white/10 transition-colors" title="Refresh" aria-label="Refresh camera">
+              <RefreshCw className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4 text-white/50", refreshing && "animate-spin")} />
             </button>
             <button onClick={() => setExpanded(!expanded)}
-              className="p-1.5 rounded-full hover:bg-white/10 transition-colors" title={expanded ? "Shrink" : "Expand"}>
+              className="p-1.5 rounded-full hover:bg-white/10 transition-colors hidden sm:block" title={expanded ? "Shrink" : "Expand"} aria-label={expanded ? "Shrink" : "Expand"}>
               {expanded ? <Minimize2 className="h-4 w-4 text-white/50" /> : <Maximize2 className="h-4 w-4 text-white/50" />}
             </button>
             <button onClick={onClose}
-              className="p-1.5 rounded-full hover:bg-white/10 transition-colors" title="Close">
-              <X className="h-4 w-4 text-white/50" />
+              className="p-1.5 rounded-full hover:bg-white/10 transition-colors" title="Close" aria-label="Close camera viewer">
+              <X className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-white/50" />
             </button>
           </div>
         </div>
@@ -152,11 +153,11 @@ function LiveCameraModal({ onClose }: { onClose: () => void }) {
             </div>
 
             {/* Camera view */}
-            <div className="flex-1 flex flex-col min-h-0 p-3">
+            <div className="flex-1 flex flex-col min-h-0 p-2 sm:p-3">
               {cam && (
                 <>
                   {/* Image */}
-                  <div className="relative flex-1 rounded-xl overflow-hidden bg-black/50 min-h-50">
+                  <div className="relative flex-1 rounded-lg sm:rounded-xl overflow-hidden bg-black/50 min-h-40 sm:min-h-50">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       key={`${cam.id}-${imgKey}`}
@@ -201,14 +202,14 @@ function LiveCameraModal({ onClose }: { onClose: () => void }) {
                   </div>
 
                   {/* Camera info bar */}
-                  <div className="flex items-center justify-between mt-2 px-1">
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-3.5 w-3.5 text-white/60" />
-                      <span className="text-xs text-white/60">
+                  <div className="flex items-center justify-between mt-1.5 sm:mt-2 px-1 gap-2">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <MapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-white/60 shrink-0" />
+                      <span className="text-[10px] sm:text-xs text-white/60 truncate">
                         {cam.roadway} {cam.direction} {cam.location && `— ${cam.location}`}
                       </span>
                     </div>
-                    <span className="text-[10px] text-white/50">
+                    <span className="text-[10px] text-white/50 shrink-0">
                       {selected + 1} / {cameras.length}
                     </span>
                   </div>

@@ -13,6 +13,7 @@ interface BottomSheetProps {
   currentChatId?: string | null;
   onSelectChat?: (chatId: string | null) => void;
   onDeleteChat?: (chatId: string) => void;
+  onOpen?: () => void;
 }
 
 type SheetTab = "chat" | "history";
@@ -33,7 +34,7 @@ function getClosestSnap(pct: number): number {
   return closest;
 }
 
-export function BottomSheet({ children, inputArea, chats, currentChatId, onSelectChat, onDeleteChat }: BottomSheetProps) {
+export function BottomSheet({ children, inputArea, chats, currentChatId, onSelectChat, onDeleteChat, onOpen: onOpenProp }: BottomSheetProps) {
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<SheetTab>("chat");
   const [currentSnap, setCurrentSnap] = useState(SNAP_HALF);
@@ -56,8 +57,8 @@ export function BottomSheet({ children, inputArea, chats, currentChatId, onSelec
 
   const handleOpen = useCallback(() => {
     setOpen(true);
+    onOpenProp?.();
     sheetY.set(SNAP_CLOSED);
-    // Animate to half on next frame
     requestAnimationFrame(() => animateTo(SNAP_HALF));
   }, [sheetY, animateTo]);
 
