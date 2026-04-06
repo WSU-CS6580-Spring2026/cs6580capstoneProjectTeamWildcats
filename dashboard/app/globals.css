@@ -209,3 +209,112 @@ body {
 .animate-spin-slow {
   animation: spin-slow linear infinite;
 }
+
+/* Rainfall animation */
+@keyframes rainfall {
+  0% {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  5% {
+    opacity: 1;
+  }
+  95% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(100vh);
+    opacity: 0;
+  }
+}
+
+.animate-rainfall {
+  animation: rainfall linear infinite;
+  will-change: transform, opacity;
+}
+
+/* Cloud drift animations */
+@keyframes cloud-drift {
+  0% {
+    transform: translateX(-10%);
+  }
+  50% {
+    transform: translateX(10%);
+  }
+  100% {
+    transform: translateX(-10%);
+  }
+}
+
+@keyframes cloud-drift-slow {
+  0% {
+    transform: translateX(-5%);
+  }
+  50% {
+    transform: translateX(8%);
+  }
+  100% {
+    transform: translateX(-5%);
+  }
+}
+
+.animate-cloud-drift {
+  animation: cloud-drift 20s ease-in-out infinite;
+}
+
+.animate-cloud-drift-slow {
+  animation: cloud-drift-slow 30s ease-in-out infinite;
+}
+
+/* Slow pulse for sun rays */
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 4s ease-in-out infinite;
+}
+
+/* Hide scrollbar but keep scrolling */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Animated cars driving across road */
+@keyframes drive {
+  0% {
+    left: -30px;
+  }
+  100% {
+    left: calc(100% + 30px);
+  }
+}
+
+.animate-drive {
+  animation: drive linear infinite;
+}
+
+/* Lane markings scrolling effect */
+@keyframes lane-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-36px);
+  }
+}
+
+.animate-lane-scroll {
+  animation: lane-scroll 1.5s linear infinite;
+}

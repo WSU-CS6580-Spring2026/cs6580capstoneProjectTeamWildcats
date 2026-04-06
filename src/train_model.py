@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import shutil
 from pathlib import Path
 import os
 
@@ -18,8 +19,8 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
-# from huggingface_hub import HfApi, create_repo, upload_folder
-# from huggingface_hub.utils import RepositoryNotFoundError
+from huggingface_hub import HfApi, create_repo, upload_folder
+from huggingface_hub.utils import RepositoryNotFoundError
 
 TARGET_COLUMN = "traffic_count_total"
 RANDOM_STATE = 42
@@ -53,7 +54,7 @@ def add_engineered_features(data: pd.DataFrame) -> pd.DataFrame:
     )
 
     daily["date"] = pd.to_datetime(daily["date"], errors="coerce").dt.normalize()
-    daily["weekday"] = daily["date"].dt.dayofweek  
+    daily["weekday"] = daily["date"].dt.dayofweek
 
     daily["is_holiday_weekend"] = False
 
@@ -116,13 +117,13 @@ def add_engineered_features(data: pd.DataFrame) -> pd.DataFrame:
     engineered["hour_cos"] = np.cos(2 * np.pi * engineered["hour"] / 24)
 
     engineered["day_of_week_sin"] = np.sin(2 * np.pi * engineered["day_of_week_num"] / 7)
-    engineered["day_of_week_cos"] = np.cos(2 * np.pi * engineered["day_of_week_num"] / 7)   
+    engineered["day_of_week_cos"] = np.cos(2 * np.pi * engineered["day_of_week_num"] / 7)
 
     engineered["month_sin"] = np.sin(2 * np.pi * engineered["month"] / 12)
-    engineered["month_cos"] = np.cos(2 * np.pi * engineered["month"] / 12)    
+    engineered["month_cos"] = np.cos(2 * np.pi * engineered["month"] / 12)
 
     # Drop day of week numeric
-    engineered = engineered.drop(columns=["day_of_week_num"])  
+    engineered = engineered.drop(columns=["day_of_week_num"])
 
     return engineered
 
@@ -252,7 +253,7 @@ def build_lstm_preprocessor() -> ColumnTransformer:
         "day_of_week_cos",
         "month_sin",
         "month_cos",
-    ]   
+    ]
     categorical_features = ["day_of_week"]
 
     preprocessor = ColumnTransformer(
@@ -269,7 +270,7 @@ def build_lstm_preprocessor() -> ColumnTransformer:
         remainder="drop"
     )
 
-    return preprocessor 
+    return preprocessor
 
 # This ensures all rows in a sequence fed into the model are continuous
 # It returns an array of dataframes, where each dataframe is a continuous sequence of rows with no gaps in the date_hour column.
@@ -278,7 +279,7 @@ def split_into_continuous_segments(df: pd.DataFrame) -> list[pd.DataFrame]:
 
     df["date_hour"] = pd.to_datetime(df["date_hour"])
     df["time_diff"] = df["date_hour"].diff().dt.total_seconds() / 3600
-    
+
     # Start a new sequence whenever the time difference between consecutive rows is over 1 hour
     df["segment_id"] = (df["time_diff"] > 1).cumsum()
 
@@ -287,11 +288,11 @@ def split_into_continuous_segments(df: pd.DataFrame) -> list[pd.DataFrame]:
     for _, seg in df.groupby("segment_id"):
         seg = seg.drop(columns=["time_diff", "segment_id"])
         if len(seg) >= 121:
-            segments.append(seg)    
+            segments.append(seg)
 
     return segments
 
-# Create sliding window sequences within each segment, separating features and target and returning feature and target arrays suitable for RNN/LSTM 
+# Create sliding window sequences within each segment, separating features and target and returning feature and target arrays suitable for RNN/LSTM
 def build_sequences(
     segments: list[pd.DataFrame],
     feature_cols: list[str],
@@ -329,12 +330,12 @@ class TrafficDataset(Dataset):
 
     def __getitem__(self, idx):
         return self.X[idx], self.y[idx]
-    
+
 # Define LSTM model for traffic prediction
 class TrafficLSTM(nn.Module):
     def __init__(self, input_size, hidden_size=128, horizon=72):
         super().__init__()
-       
+
         self.lstm = nn.LSTM(input_size=input_size, hidden_size=hidden_size, num_layers=2, dropout=0.2, batch_first=True)
         self.fc = nn.Linear(hidden_size, horizon)
 
@@ -363,7 +364,7 @@ def train_lstm_model(X, y, epochs=25, batch_size=128):
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
     for epoch in range(epochs):
-        
+
         epoch_loss = 0.0
 
         for batch_X, batch_y in dataloader:
@@ -375,19 +376,18 @@ def train_lstm_model(X, y, epochs=25, batch_size=128):
             epoch_loss += loss.item()
 
         print(f"Epoch {epoch+1}/{epochs}, Loss: {epoch_loss:.5f}")
-    
+
     return model
 
 
-def create_model_card(model_name: str, metrics: dict, model_type: str = "random_forest") -> str:
+def create_model_card(model_name: str, metrics: dict) -> str:
     """Create a README.md model card for Hugging Face."""
     card = f"""---
 tags:
 - traffic-prediction
-- sklearn
 - pytorch
 - time-series
-library_name: {'sklearn' if model_type == 'random_forest' else 'pytorch'}
+library_name: pytorch
 ---
 
 # {model_name}
@@ -396,7 +396,7 @@ library_name: {'sklearn' if model_type == 'random_forest' else 'pytorch'}
 This model predicts traffic counts for Snowbasin ski resort based on time, weather, and historical traffic data.
 
 ## Model Type
-{model_type.upper()}
+LSTM Neural Network
 
 ## Performance Metrics
 - RMSE: {metrics.get('rmse', 'N/A')}
@@ -412,20 +412,6 @@ The model uses the following features:
 
 ## Usage
 
-### Random Forest Model
-```python
-import joblib
-from huggingface_hub import hf_hub_download
-
-# Download model
-model_path = hf_hub_download(repo_id="YOUR_USERNAME/{model_name}", filename="champion_model.joblib")
-model = joblib.load(model_path)
-
-# Make predictions
-predictions = model.predict(X)
-```
-
-### LSTM Model
 ```python
 import torch
 from huggingface_hub import hf_hub_download
@@ -434,7 +420,7 @@ from huggingface_hub import hf_hub_download
 model_path = hf_hub_download(repo_id="YOUR_USERNAME/{model_name}", filename="champion_lstm.pth")
 
 # Load model architecture (you'll need the TrafficLSTM class)
-model = TrafficLSTM(input_size=33)  # Adjust input_size based on your features
+model = TrafficLSTM(input_size=34)  # Adjust input_size based on your features
 model.load_state_dict(torch.load(model_path))
 model.eval()
 ```
@@ -456,17 +442,7 @@ def push_to_huggingface(
     hf_token: str | None = None,
     private: bool = False,
 ) -> str:
-    """Push model artifacts to Hugging Face Hub.
-
-    Args:
-        model_dir: Directory containing model artifacts
-        repo_name: Name of the HuggingFace repository (e.g., 'username/model-name')
-        hf_token: HuggingFace API token (if None, will use HF_TOKEN env variable)
-        private: Whether to create a private repository
-
-    Returns:
-        URL of the uploaded model repository
-    """
+    """Push model artifacts to Hugging Face Hub."""
     if hf_token is None:
         hf_token = os.environ.get("HF_TOKEN")
         if hf_token is None:
@@ -476,7 +452,6 @@ def push_to_huggingface(
 
     api = HfApi()
 
-    # Create repository if it doesn't exist
     try:
         create_repo(
             repo_id=repo_name,
@@ -489,7 +464,6 @@ def push_to_huggingface(
         print(f"Error creating repository: {e}")
         raise
 
-    # Upload all files in the model directory
     try:
         api.upload_folder(
             folder_path=str(model_dir),
@@ -540,7 +514,7 @@ def train_and_evaluate(
     # preprocess data for LSTM
     # Split into train and test
     train_raw_df, test_raw_df = train_test_split(engineered, test_size=test_size, shuffle=False)
-    
+
     # Preprocess Features (Scale and impute)
     preprocessor = build_lstm_preprocessor()
     # Fit preprocessor on train data and transform train data
@@ -588,8 +562,8 @@ def train_and_evaluate(
         weekly_lag_hours=WEEKLY_LAG_HOURS,
     )
 
-    print(f"Built {len(X_train_seq)} training sequences and {len(X_test_seq)} testing sequences of length 48 hours with a 72 hour horizon for RNN/LSTM model.")
-    
+    print(f"Built {len(X_train_seq)} training sequences and {len(X_test_seq)} testing sequences of length 48 hours with a 72 hour horizon for LSTM model.")
+
     # Train and Save LSTM model
     lstm_model = train_lstm_model(X_train_seq, y_train_seq)
     torch.save(lstm_model.state_dict(), model_dir / "champion_lstm.pth")
@@ -631,7 +605,7 @@ def train_and_evaluate(
 
     y_pred_lstm = target_scaler.inverse_transform(
         lstm_predictions.reshape(-1,1)
-    ).flatten() 
+    ).flatten()
 
     y_pred_weekly_naive = target_scaler.inverse_transform(
         y_test_weekly_naive.reshape(-1, 1)
@@ -744,18 +718,7 @@ def train_and_evaluate(
     summary_file.write_text(json.dumps(summary, indent=2), encoding='utf-8')
     summary["summary_file"] = str(summary_file)
 
-    # Create and save model cards for Hugging Face
-    # rf_metrics = {
-    #     "rmse": split_results["champion_rmse"],
-    #     "mae": split_results["champion_mae"],
-    #     "r2": split_results["champion_r2"],
-    #     "split_strategy": split_results["split_strategy"],
-    #     "train_rows": split_results["train_rows"],
-    #     "test_rows": split_results["test_rows"],
-    # }
-    # rf_card = create_model_card("snowbasin-traffic-rf", rf_metrics, "random_forest")
-    # (model_dir / "README_rf.md").write_text(rf_card, encoding='utf-8')
-
+    # Create model card for Hugging Face
     lstm_metrics = {
         "rmse": lstm_rmse,
         "mae": lstm_mae,
@@ -764,49 +727,32 @@ def train_and_evaluate(
         "train_rows": len(X_train_seq),
         "test_rows": len(X_test_seq),
     }
-    lstm_card = create_model_card("snowbasin-traffic-lstm", lstm_metrics, "lstm")
+    lstm_card = create_model_card("snowbasin-traffic-lstm", lstm_metrics)
     (model_dir / "README_lstm.md").write_text(lstm_card, encoding='utf-8')
 
     # Push to Hugging Face if requested
-    # if push_to_hf:
-    #     if hf_repo_name is None:
-    #         raise ValueError("hf_repo_name must be provided when push_to_hf=True")
+    if push_to_hf:
+        if hf_repo_name is None:
+            raise ValueError("hf_repo_name must be provided when push_to_hf=True")
 
-    #     # Create separate directories for each model type
-    #     rf_dir = model_dir / "random_forest"
-    #     lstm_dir = model_dir / "lstm"
-    #     rf_dir.mkdir(parents=True, exist_ok=True)
-    #     lstm_dir.mkdir(parents=True, exist_ok=True)
+        # Create LSTM directory with all artifacts
+        lstm_dir = model_dir / "lstm"
+        lstm_dir.mkdir(parents=True, exist_ok=True)
 
-    #     # Copy Random Forest artifacts
-    #     import shutil
-    #     shutil.copy(model_dir / "champion_model.joblib", rf_dir / "champion_model.joblib")
-    #     shutil.copy(model_dir / "README_rf.md", rf_dir / "README.md")
+        shutil.copy(model_dir / "champion_lstm.pth", lstm_dir / "champion_lstm.pth")
+        shutil.copy(model_dir / "lstm_preprocessor.joblib", lstm_dir / "lstm_preprocessor.joblib")
+        shutil.copy(model_dir / "lstm_target_scaler.joblib", lstm_dir / "lstm_target_scaler.joblib")
+        shutil.copy(model_dir / "lstm_config.json", lstm_dir / "lstm_config.json")
+        shutil.copy(model_dir / "README_lstm.md", lstm_dir / "README.md")
 
-    #     # Copy LSTM artifacts
-    #     shutil.copy(model_dir / "champion_lstm.pth", lstm_dir / "champion_lstm.pth")
-    #     shutil.copy(model_dir / "lstm_preprocessor.joblib", lstm_dir / "lstm_preprocessor.joblib")
-    #     shutil.copy(model_dir / "lstm_target_scaler.joblib", lstm_dir / "lstm_target_scaler.joblib")
-    #     shutil.copy(model_dir / "lstm_config.json", lstm_dir / "lstm_config.json")
-    #     shutil.copy(model_dir / "README_lstm.md", lstm_dir / "README.md")
-
-    #     # Upload Random Forest model
-    #     try:
-    #         rf_repo = f"{hf_repo_name}-random-forest"
-    #         rf_url = push_to_huggingface(rf_dir, rf_repo, hf_token, hf_private)
-    #         summary["huggingface_rf_url"] = rf_url
-    #     except Exception as e:
-    #         print(f"Failed to upload Random Forest model: {e}")
-    #         summary["huggingface_rf_error"] = str(e)
-
-    #     # Upload LSTM model
-    #     try:
-    #         lstm_repo = f"{hf_repo_name}-lstm"
-    #         lstm_url = push_to_huggingface(lstm_dir, lstm_repo, hf_token, hf_private)
-    #         summary["huggingface_lstm_url"] = lstm_url
-    #     except Exception as e:
-    #         print(f"Failed to upload LSTM model: {e}")
-    #         summary["huggingface_lstm_error"] = str(e)
+        # Upload LSTM model
+        try:
+            lstm_repo = f"{hf_repo_name}-lstm"
+            lstm_url = push_to_huggingface(lstm_dir, lstm_repo, hf_token, hf_private)
+            summary["huggingface_lstm_url"] = lstm_url
+        except Exception as e:
+            print(f"Failed to upload LSTM model: {e}")
+            summary["huggingface_lstm_error"] = str(e)
 
     return summary
 
@@ -841,7 +787,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--hf-repo-name",
         type=str,
-        help="Base name for Hugging Face repositories (e.g., 'username/snowbasin-traffic'). Will create two repos: *-random-forest and *-lstm",
+        help="Base name for Hugging Face repository (e.g., 'username/snowbasin-traffic'). Will create *-lstm repo.",
     )
     parser.add_argument(
         "--hf-token",

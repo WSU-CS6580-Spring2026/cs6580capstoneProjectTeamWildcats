@@ -1,8 +1,9 @@
 "use client";
 
-import { Mountain, AlertTriangle, Thermometer, Brain, TreePine, Activity } from "lucide-react";
+import { Mountain, AlertTriangle, Thermometer, TreePine, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ModelType } from "@/components/chat-input";
+import { useSpaceStatus } from "@/hooks/use-space-status";
 
 interface ChatWelcomeProps {
   selectedModel: ModelType;
@@ -13,12 +14,54 @@ interface ChatWelcomeProps {
 
 const QUICK_PROMPTS = [
   { icon: "🚗", label: "Traffic today 8am", message: "How busy is traffic to Snowbasin today at 8am?" },
+  { icon: "📅", label: "Saturday 9am", message: "How busy is traffic to Snowbasin this Saturday at 9am?" },
   { icon: "🏔️", label: "SR-167 conditions", message: "What are the current road conditions on SR-167 Trappers Loop to Snowbasin?" },
-  { icon: "🚌", label: "UTA bus options", message: "What UTA bus options are there to Snowbasin?" },
-  { icon: "🗺️", label: "Directions to Snowbasin", message: "How do I get to Snowbasin Resort from Ogden?" },
-  { icon: "📅", label: "Busy this weekend?", message: "How busy will Snowbasin be this Saturday at 9am? Use typical winter conditions." },
-  { icon: "⚠️", label: "Any closures?", message: "Are there any road closures or traction laws on SR-39 or SR-167 right now?" },
+  { icon: "🚌", label: "UTA transit", message: "What UTA bus and transit options are there to get to Snowbasin?" },
+  { icon: "🗺️", label: "Directions", message: "How do I get to Snowbasin Resort from Ogden?" },
+  { icon: "⚠️", label: "Road closures", message: "Are there any road closures or traction laws on SR-39 or SR-167 right now?" },
 ];
+
+function ModelStatusBadge({ modelKey }: { modelKey: "lstm" }) {
+  const { status, models } = useSpaceStatus();
+
+  if (status === "unknown") {
+    return (
+      <div className="mt-2 flex items-center gap-1">
+        <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+        <span className="text-xs text-muted-foreground">Checking...</span>
+      </div>
+    );
+  }
+
+  if (status === "warming") {
+    return (
+      <div className="mt-2 flex items-center gap-1">
+        <div className="h-2 w-2 rounded-full bg-yellow-500 animate-pulse" />
+        <span className="text-xs text-yellow-600 dark:text-yellow-400 font-medium">Starting up...</span>
+      </div>
+    );
+  }
+
+  if (status === "offline") {
+    return (
+      <div className="mt-2 flex items-center gap-1">
+        <div className="h-2 w-2 rounded-full bg-red-500" />
+        <span className="text-xs text-red-600 dark:text-red-400 font-medium">Offline</span>
+      </div>
+    );
+  }
+
+  // Online — check individual model
+  const modelReady = models?.[modelKey] ?? false;
+  return (
+    <div className="mt-2 flex items-center gap-1">
+      <div className={cn("h-2 w-2 rounded-full", modelReady ? "bg-green-500" : "bg-red-500")} />
+      <span className={cn("text-xs font-medium", modelReady ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400")}>
+        {modelReady ? "Ready" : "Failed to load"}
+      </span>
+    </div>
+  );
+}
 
 export function ChatWelcome({ selectedModel, onModelChange, isGuest, onSend }: ChatWelcomeProps) {
   return (
@@ -29,7 +72,7 @@ export function ChatWelcome({ selectedModel, onModelChange, isGuest, onSend }: C
           Snowbasin Traffic Assistant
         </h1>
         <p className="text-sm text-muted-foreground">
-          ML-powered traffic predictions · Live UDOT road conditions · UTA transit
+          ML-powered traffic predictions · Live UDOT road conditions · UTA service alerts
         </p>
         {isGuest && (
           <div className="inline-flex items-center gap-1.5 mt-1 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
@@ -40,77 +83,21 @@ export function ChatWelcome({ selectedModel, onModelChange, isGuest, onSend }: C
         )}
       </div>
 
-      {/* Model Selector Cards */}
-      <div className="grid grid-cols-2 gap-3">
-        <button
-          type="button"
-          onClick={() => onModelChange("random-forest")}
-          className={cn(
-            "group rounded-xl border p-4 text-left transition-all duration-200",
-            selectedModel === "random-forest"
-              ? "border-blue-500 bg-blue-50 dark:bg-blue-950/30 shadow-sm"
-              : "border-border hover:border-blue-300 hover:bg-muted/50"
-          )}
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <div className={cn(
-              "flex h-8 w-8 items-center justify-center rounded-lg text-base transition-colors",
-              selectedModel === "random-forest"
-                ? "bg-blue-500 text-white"
-                : "bg-muted text-muted-foreground group-hover:bg-blue-100 group-hover:text-blue-600"
-            )}>
-              🌲
-            </div>
-            <div>
-              <p className="text-xs font-semibold">Random Forest</p>
-              {selectedModel === "random-forest" && (
-                <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">Active</span>
-              )}
-            </div>
+      {/* Model Info */}
+      <div className="rounded-xl border border-green-500/30 bg-green-50 dark:bg-green-950/30 p-4">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg text-base bg-green-500 text-white">
+            📊
           </div>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            Fast & reliable. Best for general traffic forecasts using weather and time features.
-          </p>
-          <div className="mt-2 flex items-center gap-1">
-            <Activity className="h-3 w-3 text-green-500" />
-            <span className="text-xs text-green-600 dark:text-green-400 font-medium">Deployed on HuggingFace</span>
+          <div>
+            <p className="text-xs font-semibold">LSTM Neural Network</p>
+            <span className="text-xs text-green-600 dark:text-green-400 font-medium">Active</span>
           </div>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => onModelChange("lstm")}
-          className={cn(
-            "group rounded-xl border p-4 text-left transition-all duration-200",
-            selectedModel === "lstm"
-              ? "border-green-500 bg-green-50 dark:bg-green-950/30 shadow-sm"
-              : "border-border hover:border-green-300 hover:bg-muted/50"
-          )}
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <div className={cn(
-              "flex h-8 w-8 items-center justify-center rounded-lg text-base transition-colors",
-              selectedModel === "lstm"
-                ? "bg-green-500 text-white"
-                : "bg-muted text-muted-foreground group-hover:bg-green-100 group-hover:text-green-600"
-            )}>
-              🧠
-            </div>
-            <div>
-              <p className="text-xs font-semibold">LSTM</p>
-              {selectedModel === "lstm" && (
-                <span className="text-xs text-green-600 dark:text-green-400 font-medium">Active</span>
-              )}
-            </div>
-          </div>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            Advanced time-series analysis. Learns sequential traffic patterns over time.
-          </p>
-          <div className="mt-2 flex items-center gap-1">
-            <Brain className="h-3 w-3 text-green-500" />
-            <span className="text-xs text-green-600 dark:text-green-400 font-medium">Deployed on HuggingFace</span>
-          </div>
-        </button>
+        </div>
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          Uses real 48-hour traffic sequences to predict the next 72 hours of traffic patterns.
+        </p>
+        <ModelStatusBadge modelKey="lstm" />
       </div>
 
       {/* Capability Cards */}
@@ -123,12 +110,12 @@ export function ChatWelcome({ selectedModel, onModelChange, isGuest, onSend }: C
             <h3 className="text-xs font-semibold">Traffic Prediction</h3>
           </div>
           <p className="text-xs text-muted-foreground">
-            ML-powered forecasts using time, weather, and seasonal data.
+            Real historical data from Trappers Loop sensors (2015-2024). Just provide day and time.
           </p>
           <div className="space-y-1">
             <p className="text-xs text-muted-foreground font-medium">Try:</p>
-            <p className="text-xs text-muted-foreground italic">"Predict traffic Saturday at 8am"</p>
-            <p className="text-xs text-muted-foreground italic">"How busy on a holiday weekend?"</p>
+            <p className="text-xs text-muted-foreground italic">"How busy Saturday at 8am?"</p>
+            <p className="text-xs text-muted-foreground italic">"Traffic tomorrow morning"</p>
           </div>
         </div>
 
@@ -144,8 +131,8 @@ export function ChatWelcome({ selectedModel, onModelChange, isGuest, onSend }: C
           </p>
           <div className="space-y-1">
             <p className="text-xs text-muted-foreground font-medium">Try:</p>
-            <p className="text-xs text-muted-foreground italic">"SR-39 conditions to Snowbasin?"</p>
-            <p className="text-xs text-muted-foreground italic">"Are chains required on SR-210?"</p>
+            <p className="text-xs text-muted-foreground italic">"SR-167 conditions to Snowbasin?"</p>
+            <p className="text-xs text-muted-foreground italic">"Any closures on I-80?"</p>
           </div>
         </div>
 
@@ -154,15 +141,15 @@ export function ChatWelcome({ selectedModel, onModelChange, isGuest, onSend }: C
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-500/10 text-orange-600">
               <Thermometer className="h-4 w-4" />
             </div>
-            <h3 className="text-xs font-semibold">Weather & Alerts</h3>
+            <h3 className="text-xs font-semibold">Weather & Transit</h3>
           </div>
           <p className="text-xs text-muted-foreground">
-            Live weather stations, surface temps, wind, and alerts.
+            UDOT weather stations along I-15/I-80. UTA service alerts for bus detours.
           </p>
           <div className="space-y-1">
             <p className="text-xs text-muted-foreground font-medium">Try:</p>
-            <p className="text-xs text-muted-foreground italic">"Surface temp at Parley's Canyon"</p>
-            <p className="text-xs text-muted-foreground italic">"Any closures on I-80?"</p>
+            <p className="text-xs text-muted-foreground italic">"Surface temp at Parley's Summit"</p>
+            <p className="text-xs text-muted-foreground italic">"UTA service alerts"</p>
           </div>
         </div>
       </div>
@@ -190,14 +177,14 @@ export function ChatWelcome({ selectedModel, onModelChange, isGuest, onSend }: C
       {/* Prediction parameters info */}
       <div className="rounded-xl border bg-muted/30 p-4">
         <div className="flex items-start gap-3">
-          <AlertTriangle className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
+          <AlertTriangle className="h-4 w-4 text-blue-500 mt-0.5 shrink-0" />
           <div className="space-y-1">
-            <p className="text-xs font-semibold">For Traffic Predictions</p>
+            <p className="text-xs font-semibold">How It Works</p>
             <p className="text-xs text-muted-foreground">
-              Tell me the <span className="font-medium text-foreground">day, time, and weather conditions</span> (or say "use typical winter conditions") and I'll run the {selectedModel === "random-forest" ? "🌲 Random Forest" : "🧠 LSTM"} model and explain the results.
+              Just tell me a <span className="font-medium text-foreground">day and time</span> — the 📊 LSTM model will use real historical weather and traffic data from Trappers Loop sensors automatically.
             </p>
             <p className="text-xs text-muted-foreground italic mt-1">
-              "Predict traffic for Saturday 8am with 18 inches of snow and 28°F"
+              "How busy is traffic to Snowbasin this Saturday at 9am?"
             </p>
           </div>
         </div>

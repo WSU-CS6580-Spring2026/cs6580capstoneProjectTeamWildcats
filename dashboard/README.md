@@ -13,7 +13,7 @@ A Utah-focused AI assistant for snow conditions and UTA transit schedules.
 - **Framework**: Next.js 16 with App Router
 - **Database**: Supabase (PostgreSQL)
 - **Auth**: Supabase Auth (Email, Google, GitHub OAuth)
-- **AI**: Claude API
+- **AI**: Anthropic API
 - **Styling**: Tailwind CSS
 - **Maps**: Google Maps API
 
@@ -22,7 +22,7 @@ A Utah-focused AI assistant for snow conditions and UTA transit schedules.
 - Node.js 18+
 - npm or yarn
 - Supabase account
-- Anthropic API key
+- Anthropic API key (for chat assistant)
 - Google Maps API key
 
 ## Setup
@@ -55,7 +55,7 @@ Fill in your credentials in `.env.local`:
 | `NEXT_PUBLIC_SUPABASE_URL` | Your Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Your Supabase anonymous key |
 | `DATABASE_URL` | PostgreSQL connection string |
-| `ANTHROPIC_API_KEY` | Claude API key from Anthropic |
+| `ANTHROPIC_API_KEY` | API key for chat assistant |
 | `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | Google Maps API key |
 
 ### 4. Set up Supabase
@@ -156,7 +156,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 ├── hooks/                # Custom hooks
 ├── lib/
 │   ├── supabase/         # Supabase client
-│   ├── claude.ts         # AI integration
+│   ├── ai.ts             # AI integration
 │   └── uta.ts            # UTA API
 └── public/               # Static assets
 ```

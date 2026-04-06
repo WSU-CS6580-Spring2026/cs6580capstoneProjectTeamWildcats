@@ -1,31 +1,53 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 export type SpaceStatus = "online" | "warming" | "offline" | "unknown";
 
-export function useSpaceStatus() {
-  const [status, setStatus] = useState<SpaceStatus>("unknown");
+interface SpaceHealth {
+  status: SpaceStatus;
+  models: {
+    lstm: boolean;
+  } | null;
+  training_data: boolean | null;
+}
 
-  const check = async () => {
+export function useSpaceStatus() {
+  const [health, setHealth] = useState<SpaceHealth>({
+    status: "unknown",
+    models: null,
+    training_data: null,
+  });
+
+  const check = useCallback(async () => {
     try {
       const res = await fetch("/api/warmup", { method: "GET" });
       if (res.ok) {
-        setStatus("online");
+        const data = await res.json();
+        setHealth({
+          status: "online",
+          models: data.models || null,
+          training_data: data.training_data ?? null,
+        });
       } else if (res.status === 503) {
-        setStatus("warming");
+        setHealth({ status: "warming", models: null, training_data: null });
       } else {
-        setStatus("offline");
+        setHealth({ status: "offline", models: null, training_data: null });
       }
     } catch {
-      setStatus("offline");
+      setHealth({ status: "offline", models: null, training_data: null });
     }
-  };
+  }, []);
 
   useEffect(() => {
     check();
-    const interval = setInterval(check, 5 * 60 * 1000); // every 5 min
+    const interval = setInterval(check, 5 * 60 * 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [check]);
 
-  return { status, refresh: check };
+  return {
+    status: health.status,
+    models: health.models,
+    trainingData: health.training_data,
+    refresh: check,
+  };
 }

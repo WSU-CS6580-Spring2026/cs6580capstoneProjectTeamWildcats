@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /settings
+Sitemap: https://dashboard-snowbasin-wildcats.vercel.app/sitemap.xml

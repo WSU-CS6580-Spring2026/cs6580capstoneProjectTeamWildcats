@@ -8,9 +8,15 @@ export async function GET() {
   try {
     const response = await fetch(`${HF_FASTAPI_URL}/health`, {
       cache: "no-store",
+      signal: AbortSignal.timeout(10000),
     });
     const data = await response.json();
-    return NextResponse.json({ pinged: true, space_status: data.status });
+    return NextResponse.json({
+      pinged: true,
+      space_status: data.status,
+      models: data.models,
+      training_data: data.training_data,
+    });
   } catch (error) {
     return NextResponse.json({ pinged: false, error: String(error) }, { status: 503 });
   }

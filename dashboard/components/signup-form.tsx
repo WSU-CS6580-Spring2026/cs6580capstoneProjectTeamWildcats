@@ -18,7 +18,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { PasswordStrength, getStrength } from "@/components/ui/password-strength";
-import { Loader2, Snowflake, Mountain, Train } from "lucide-react";
+import { Loader2, Snowflake, Mountain, Train, Shield } from "lucide-react";
 import { toast } from "sonner";
 
 const containerVariants: Variants = {
@@ -128,7 +128,7 @@ export function SignupForm({
       initial="hidden"
       animate="visible"
     >
-      <Card className="overflow-hidden p-0">
+      <Card className="overflow-hidden p-0 bg-white/5 backdrop-blur-xl border-white/10">
         <CardContent className="grid p-0 md:grid-cols-2">
           <motion.form
             className="p-6 md:p-8"
@@ -146,7 +146,7 @@ export function SignupForm({
                 <h1 className="text-2xl font-bold bg-linear-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
                   Create your account
                 </h1>
-                <p className="text-muted-foreground text-sm text-balance">
+                <p className="text-white/70 text-sm text-balance">
                   Join Snowbasin for Utah snow & transit updates
                 </p>
               </motion.div>
@@ -236,7 +236,7 @@ export function SignupForm({
               </motion.div>
 
               <motion.div variants={itemVariants}>
-                <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">
+                <FieldSeparator className="*:data-[slot=field-separator-content]:bg-transparent">
                   Or continue with
                 </FieldSeparator>
               </motion.div>
@@ -248,7 +248,7 @@ export function SignupForm({
                     type="button"
                     disabled={oauthLoading !== null}
                     onClick={() => handleOAuthLogin("google")}
-                    className="transition-all hover:bg-gray-50 dark:hover:bg-gray-800"
+                    className="transition-all hover:bg-white/10 border-white/10 text-white/70"
                   >
                     {oauthLoading === "google" ? (
                       <Loader2 className="h-5 w-5 animate-spin" />
@@ -267,7 +267,7 @@ export function SignupForm({
                     type="button"
                     disabled={oauthLoading !== null}
                     onClick={() => handleOAuthLogin("github")}
-                    className="transition-all hover:bg-gray-50 dark:hover:bg-gray-800"
+                    className="transition-all hover:bg-white/10 border-white/10 text-white/70"
                   >
                     {oauthLoading === "github" ? (
                       <Loader2 className="h-5 w-5 animate-spin" />
@@ -341,16 +341,13 @@ export function SignupForm({
       </Card>
 
       <motion.div variants={itemVariants}>
-        <FieldDescription className="px-6 text-center">
-          By creating an account, you agree to our{" "}
-          <Link href="#" className="text-blue-500 hover:text-blue-600">
-            Terms of Service
-          </Link>{" "}
-          and{" "}
-          <Link href="#" className="text-blue-500 hover:text-blue-600">
-            Privacy Policy
-          </Link>
-          .
+        <FieldDescription className="px-6 text-center text-white/60">
+          <span className="flex items-center justify-center gap-1.5 mb-1">
+            <Shield className="h-3.5 w-3.5 text-green-400" />
+            <span className="text-white/70 font-medium">Your data stays private</span>
+          </span>
+          We only store your chat history to improve your experience.
+          No data is shared with third parties.
         </FieldDescription>
       </motion.div>
     </motion.div>

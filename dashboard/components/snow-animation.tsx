@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, memo } from "react";
+import { createPortal } from "react-dom";
 
 interface Snowflake {
   id: number;
@@ -150,10 +151,10 @@ function SnowAnimationComponent() {
 
   if (!mounted) return null;
 
-  return (
+  return createPortal(
     <div
       className="pointer-events-none fixed inset-0 overflow-hidden"
-      style={{ zIndex: 9999 }}
+      style={{ zIndex: 1 }}
       aria-hidden="true"
     >
       {snowflakes.map((flake) => (
@@ -180,7 +181,8 @@ function SnowAnimationComponent() {
           </div>
         </div>
       ))}
-    </div>
+    </div>,
+    document.body
   );
 }
 
