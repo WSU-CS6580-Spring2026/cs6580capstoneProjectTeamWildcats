@@ -13,7 +13,7 @@ A Utah-focused AI assistant for snow conditions and UTA transit schedules.
 - **Framework**: Next.js 16 with App Router
 - **Database**: Supabase (PostgreSQL)
 - **Auth**: Supabase Auth (Email, Google, GitHub OAuth)
-- **AI**: Anthropic API (chat assistant)
+- **AI**: Anthropic API
 - **Styling**: Tailwind CSS
 - **Maps**: Google Maps API
 
