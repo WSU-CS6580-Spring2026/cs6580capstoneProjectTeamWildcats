@@ -18,7 +18,7 @@ Dani Lopez • Hazem Dawahi • Roberto Camposeco • Kevin Bell
 # 1) The Hook: Why This Matters
 
 ## Stakeholder
-Snowbasin Resort operations teams managing weekend/holiday guest arrivals.
+Snowbasin Resort skiers/snowboarders managing better arrival times
 
 ## Business Problem
 Traffic surges on Trappers Loop (SR-167) create:
@@ -28,7 +28,7 @@ Traffic surges on Trappers Loop (SR-167) create:
 - poor guest experience.
 
 ## Project Goal
-Forecast hourly traffic demand **up to 72 hours ahead** so teams can act before congestion forms.
+Forecast hourly traffic demand **up to 72 hours ahead** so users can act before congestion forms.
 
 ---
 
@@ -121,23 +121,22 @@ Users trusted the concept, but many were confused by the workflow and model term
 # 7) Live Demo Plan (3–4 Minutes)
 
 ## Demo scenario
-"Operations manager planning Saturday morning powder-day traffic"
+"User planning Saturday morning powder-day traffic"
 
 ## Walkthrough script
 1. Open dashboard homepage.
 2. Select realistic forecast date/time window.
 3. Trigger prediction.
 4. Interpret congestion signal + related context cards.
-5. Explain operations action (staffing/parking messaging).
 
 ## Success criterion
-A stakeholder can understand and act on results in under 1 minute.
+A user can understand and act on results in under 1 minute.
 
 ---
 
 # 8) Business Recommendation
 
-Based on model outputs and user-tested workflow, Snowbasin should:
+Based on model outputs and user-tested workflow, Snowbasin could:
 
 1. **Pre-stage staffing** for predicted high-demand windows.
 2. **Send dynamic arrival messaging** to flatten surge behavior.
@@ -148,21 +147,7 @@ This project is decision support, not autopilot.
 
 ---
 
-# 9) Sprint 6 Deliverables Checklist
-
-## Phase 1 (Due April 16, 2026)
-- [x] Code freeze + final merge hygiene
-- [x] Reproducibility path in repository docs
-- [x] Final report with executive-to-technical narrative
-
-## Phase 2 (Due April 23, 2026)
-- [x] Final slide deck (this file)
-- [x] Live demo flow prepared
-- [x] Recommendation + Q&A narrative ready
-
----
-
-# 10) Extra Credit Deployment Status
+# 9) Extra Credit Deployment Status
 
 ## Deployment challenge target
 Public URL access with no local Python install required.
@@ -175,7 +160,7 @@ A functioning live app strengthens this as a professional artifact beyond the co
 
 ---
 
-# 11) Risks, Limits, and Future Work
+# 10) Risks, Limits, and Future Work
 
 ## Known limits
 - forecast misses can occur during atypical events,
@@ -190,10 +175,10 @@ A functioning live app strengthens this as a professional artifact beyond the co
 
 ---
 
-# 12) Closing
+# 11) Closing
 
 ## Final Message
-We turned a semester-long ML build into a stakeholder-ready congestion planning tool.
+We turned a semester-long ML build into a user-ready congestion planning tool.
 
 ## Ask
 We welcome feedback on:
