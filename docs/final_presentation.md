@@ -6,7 +6,7 @@ theme: default
 ---
 
 # Snowbasin Congestion Engine
-## CS-6580 Final Expo (Sprint 6)
+## CS-6580 Final Presentation
 
 **Team Wildcats**  
 Dani Lopez • Hazem Dawahi • Roberto Camposeco • Kevin Bell  
