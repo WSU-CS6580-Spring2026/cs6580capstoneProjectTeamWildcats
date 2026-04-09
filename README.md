@@ -13,7 +13,7 @@ https://dashboard-snowbasin-wildcats.vercel.app/
 
 ## Project goal
 
-Predict peak-hour traffic volume on Trappers Loop (SR-167) to optimize mountain resort staffing and parking operations 72 hours in advance.
+Predict peak-hour traffic volume on Trappers Loop (SR-167) 72 hours in advance.
 
 ## Links
 
