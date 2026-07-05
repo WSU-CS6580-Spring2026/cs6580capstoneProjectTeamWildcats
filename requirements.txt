@@ -40,7 +40,7 @@ scipy==1.17.0
 seaborn==0.13.2
 six==1.17.0
 stack-data==0.6.3
-torch==2.12.0
+torch==2.12.1
 tornado==6.5.7
 traitlets==5.14.3
 tzdata==2025.3
@@ -48,5 +48,5 @@ urllib3==2.7.0
 wcwidth==0.3.1
 joblib==1.5.2
 scikit-learn==1.7.2
-gradio==6.7.0
+gradio==6.15.0
 huggingface-hub==0.28.1
