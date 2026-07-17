@@ -48,5 +48,5 @@ urllib3==2.7.0
 wcwidth==0.3.1
 joblib==1.5.2
 scikit-learn==1.7.2
-gradio==6.15.0
+gradio==6.15.1
 huggingface-hub==0.28.1
